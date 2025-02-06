@@ -71,26 +71,26 @@ const GameRecommendations = ({ campaignInfo }: { campaignInfo: any }) => {
             </CardTitle>
           </CardHeader>
           <CardContent className="pt-6">
-            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+            <div className="grid grid-cols-1 gap-3">
               {filteredGames.map((game) => (
                 <div
                   key={game.id}
-                  className="flex items-start gap-3 p-2 rounded-xl bg-[#f5f5f7] transition-transform hover:-translate-y-0.5"
+                  className="flex items-start gap-4 p-3 rounded-xl bg-[#f5f5f7] transition-transform hover:-translate-y-0.5"
                 >
                   <img
                     src={game.image}
                     alt={game.name}
-                    className="w-10 h-10 rounded-lg object-cover flex-shrink-0"
+                    className="w-24 h-24 rounded-lg object-cover flex-shrink-0"
                     draggable="false"
                   />
-                  <div className="flex-grow min-w-0 py-0.5">
-                    <h3 className="text-[#1d1d1f] font-medium text-sm mb-0.5 line-clamp-2">
+                  <div className="flex-grow min-w-0 py-1">
+                    <h3 className="text-[#1d1d1f] font-medium text-lg mb-1">
                       {game.name}
                     </h3>
                     <TooltipProvider>
                       <Tooltip>
                         <TooltipTrigger asChild>
-                          <p className="text-[#86868b] text-xs truncate">
+                          <p className="text-[#86868b] text-sm truncate">
                             {game.type.join(', ')}
                           </p>
                         </TooltipTrigger>
