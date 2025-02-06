@@ -256,7 +256,7 @@ export const kols: KOL[] = [
     },
     defaultAnimations: ['Dance Moves', 'Stage Performance', 'Cute Wave'],
     stats: 'Followers: 3.8M, Engagement Rate: 7.2%, Main Platform: TikTok',
-    image: '/characters/rose.png',
+    image: '/characters/Rose.png',
     regions: ['Asia', 'North America', 'Europe'],
     platforms: ['Instagram', 'TikTok', 'YouTube'],
     audience: {
@@ -296,7 +296,7 @@ export const kols: KOL[] = [
     },
     defaultAnimations: ['Rap Performance', 'Street Walk', 'Mic Drop'],
     stats: 'Followers: 5.1M, Engagement Rate: 6.5%, Main Platform: Twitter',
-    image: '/characters/eminem.png',
+    image: '/characters/Eminem.png',
     regions: ['North America', 'Europe'],
     platforms: ['Instagram', 'Twitter', 'YouTube'],
     audience: {
