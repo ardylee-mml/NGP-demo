@@ -95,7 +95,7 @@ export const kols: KOL[] = [
     },
     defaultAnimations: ['Sports Celebration', 'Training Routine', 'Victory Pose'],
     stats: 'Followers: 3.8M, Engagement Rate: 7.2%, Main Platform: TikTok',
-    image: '/kols/SportStar.png',
+    image: '/characters/SportStar-Athlete.png',
     regions: ['North America', 'Europe'],
     platforms: ['Instagram', 'TikTok', 'YouTube'],
     audience: {
@@ -135,7 +135,7 @@ export const kols: KOL[] = [
     },
     defaultAnimations: ['Drawing Pose', 'Creative Expression', 'Artistic Flourish'],
     stats: 'Followers: 5.1M, Engagement Rate: 6.5%, Main Platform: Twitter',
-    image: '/kols/ArtisticSoul.png',
+    image: '/characters/ArtisticSoul-Artist.png',
     regions: ['North America', 'Europe'],
     platforms: ['Instagram', 'YouTube', 'Twitter'],
     audience: {
@@ -175,7 +175,7 @@ export const kols: KOL[] = [
     },
     defaultAnimations: ['Catwalk', 'Photo Pose', 'Elegant Wave'],
     stats: 'Followers: 4.2M, Engagement Rate: 5.9%, Main Platform: Instagram',
-    image: '/kols/StyleIcon.png',
+    image: '/characters/StyleIcon-FashionInfluencer.png',
     regions: ['North America', 'Europe'],
     platforms: ['Instagram', 'TikTok', 'Pinterest'],
     audience: {
