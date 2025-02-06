@@ -1,34 +1,36 @@
 "use client"
 
-import { createContext, useContext, useState, ReactNode } from 'react'
+import { createContext, useContext, useState } from "react"
 
-interface MarketingCampaign {
+interface CampaignDetails {
   objective?: string
   targetAudience?: string
   targetRegion?: string
-  isComplete?: boolean
+  budget?: string
 }
 
 interface MarketingCampaignContextType {
-  campaignDetails: MarketingCampaign
-  setCampaignDetails: (details: MarketingCampaign) => void
+  campaignDetails: CampaignDetails
+  setCampaignDetails: (details: CampaignDetails) => void
   isComplete: boolean
   setIsComplete: (complete: boolean) => void
 }
 
 const MarketingCampaignContext = createContext<MarketingCampaignContextType | undefined>(undefined)
 
-export function MarketingCampaignProvider({ children }: { children: ReactNode }) {
-  const [campaignDetails, setCampaignDetails] = useState<MarketingCampaign>({})
+export function MarketingCampaignProvider({ children }: { children: React.ReactNode }) {
+  const [campaignDetails, setCampaignDetails] = useState<CampaignDetails>({})
   const [isComplete, setIsComplete] = useState(false)
 
   return (
-    <MarketingCampaignContext.Provider value={{ 
-      campaignDetails, 
-      setCampaignDetails,
-      isComplete,
-      setIsComplete
-    }}>
+    <MarketingCampaignContext.Provider 
+      value={{
+        campaignDetails,
+        setCampaignDetails,
+        isComplete,
+        setIsComplete
+      }}
+    >
       {children}
     </MarketingCampaignContext.Provider>
   )

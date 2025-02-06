@@ -3,69 +3,65 @@
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { useMarketingCampaign } from "@/contexts/MarketingCampaignContext"
 
-export function CampaignSummary() {
-  const { campaignDetails, isComplete } = useMarketingCampaign()
-
-  if (!isComplete) return null
-
+const CampaignSummary = ({ info }: { info: any }) => {
   const getStrategyExplanation = () => {
-    const objective = campaignDetails.objective?.toLowerCase() || ''
-    const audience = campaignDetails.targetAudience?.toLowerCase() || ''
-    const region = campaignDetails.targetRegion?.toLowerCase() || ''
+    const objective = info.objective?.toLowerCase() || ''
+    const audience = info.target?.toLowerCase() || ''
+    const region = info.region?.toLowerCase() || ''
 
     return {
-      gameStrategy: objective.includes('awareness') ?
-        "High DAU games for maximum visibility and brand exposure" :
-        objective.includes('launch') ?
-        "Games with virtual event capabilities for product showcases" :
-        "Games with strong social features for engagement",
+      gameStrategy: objective.includes('launch') 
+        ? "Focus on games with virtual event capabilities for product showcases"
+        : objective.includes('awareness')
+        ? "Target high DAU games for maximum visibility and brand exposure"
+        : "Leverage games with strong social features for engagement",
 
-      audienceMatch: audience.includes('young') || audience.includes('teen') ?
-        "Social and competitive games to engage younger audiences" :
-        "Professional and simulation games for mature audiences",
+      audienceMatch: audience.includes('stem') || audience.includes('tech')
+        ? "Prioritize educational and simulation games"
+        : audience.includes('young')
+        ? "Focus on social and competitive games"
+        : "Balance of casual and core gaming experiences",
 
-      regionalFocus: region.includes('asia') ?
-        "Focus on mobile-friendly games popular in Asian markets" :
-        region.includes('europe') ?
-        "Emphasis on PC and console titles strong in European markets" :
-        "Mix of platforms to reach diverse regional preferences"
+      regionalFocus: region.includes('asia')
+        ? "Emphasis on mobile-first games popular in Asian markets"
+        : region.includes('usa')
+        ? "Mix of PC and mobile titles strong in Western markets"
+        : "Diverse platform approach for global reach"
     }
   }
 
   const strategy = getStrategyExplanation()
 
   return (
-    <Card className="bg-white border-0 shadow-sm">
-      <CardHeader className="border-b border-[#d2d2d7]">
-        <CardTitle className="text-[#1d1d1f] text-xl font-semibold">Campaign Strategy</CardTitle>
-      </CardHeader>
-      <CardContent className="space-y-6 pt-4">
-        {/* Campaign Details */}
-        <div className="grid grid-cols-3 gap-4">
-          <div className="space-y-1">
-            <h3 className="text-sm font-medium text-[#1d1d1f]">Objective</h3>
-            <p className="text-sm text-[#86868b]">{campaignDetails.objective}</p>
+    <div className="bg-white rounded-lg shadow p-6">
+      <h2 className="text-xl font-bold mb-4">Campaign Strategy</h2>
+      <div className="space-y-6">
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+          <div>
+            <h3 className="font-semibold text-gray-600">Objective</h3>
+            <p>{info.objective}</p>
           </div>
-          <div className="space-y-1">
-            <h3 className="text-sm font-medium text-[#1d1d1f]">Target Audience</h3>
-            <p className="text-sm text-[#86868b]">{campaignDetails.targetAudience}</p>
+          <div>
+            <h3 className="font-semibold text-gray-600">Target Audience</h3>
+            <p>{info.target}</p>
           </div>
-          <div className="space-y-1">
-            <h3 className="text-sm font-medium text-[#1d1d1f]">Target Region</h3>
-            <p className="text-sm text-[#86868b]">{campaignDetails.targetRegion}</p>
+          <div>
+            <h3 className="font-semibold text-gray-600">Region</h3>
+            <p>{info.region}</p>
           </div>
         </div>
-
-        {/* Strategy Explanation */}
-        <div className="space-y-3 border-t border-[#d2d2d7] pt-4">
-          <h3 className="text-sm font-medium text-[#1d1d1f]">Recommendation Strategy</h3>
-          <div className="space-y-2">
-            <p className="text-sm text-[#86868b]">• {strategy.gameStrategy}</p>
-            <p className="text-sm text-[#86868b]">• {strategy.audienceMatch}</p>
-            <p className="text-sm text-[#86868b]">• {strategy.regionalFocus}</p>
+        
+        <div className="border-t pt-4">
+          <h3 className="font-semibold text-gray-600 mb-3">Recommended Strategy</h3>
+          <div className="space-y-2 text-sm text-gray-600">
+            <p>• {strategy.gameStrategy}</p>
+            <p>• {strategy.audienceMatch}</p>
+            <p>• {strategy.regionalFocus}</p>
           </div>
         </div>
-      </CardContent>
-    </Card>
+      </div>
+    </div>
   )
-} 
+}
+
+export default CampaignSummary 

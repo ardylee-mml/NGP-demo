@@ -75,18 +75,36 @@ const getExplanation = (state: ConversationState): string => {
   }
 }
 
-export function Chatbot({ className = "" }: { className?: string }) {
+interface ChatMessage {
+  role: "assistant" | "user"
+  content: string
+}
+
+interface ChatbotProps {
+  onComplete: (info: {
+    objective: string
+    target: string
+    region: string
+  }) => void
+}
+
+export function Chatbot({ onComplete }: ChatbotProps) {
   const { campaignDetails, setCampaignDetails, isComplete, setIsComplete } = useMarketingCampaign()
   const [conversationState, setConversationState] = useState<ConversationState>('objective')
   
-  const [messages, setMessages] = useState<Array<{ id: string; role: string; content: string }>>([
+  const [messages, setMessages] = useState<ChatMessage[]>([
     {
-      id: '1',
-      role: 'assistant',
+      role: "assistant",
       content: "Hi! What's the main objective of your marketing campaign?"
     }
   ])
-  const [input, setInput] = useState('')
+  const [input, setInput] = useState("")
+  const [step, setStep] = useState(1)
+  const [campaignInfo, setCampaignInfo] = useState({
+    objective: "",
+    target: "",
+    region: ""
+  })
 
   const chatContentRef = useRef<HTMLDivElement>(null)
   const messagesEndRef = useRef<HTMLDivElement>(null)
@@ -136,90 +154,60 @@ export function Chatbot({ className = "" }: { className?: string }) {
     )
   }
 
-  const handleSubmit = async (e: React.FormEvent) => {
+  const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault()
     if (!input.trim()) return
 
-    const userMessage = { id: Date.now().toString(), role: 'user', content: input }
-    setMessages(prev => [...prev, userMessage])
-    setInput('')
-
-    const validation = validateAnswer(conversationState, input)
-    
-    if (conversationState !== 'complete' && (!validation.valid || validation.isQuestion)) {
-      const explanation = getExplanation(conversationState)
-      setMessages(prev => [...prev, {
-        id: (Date.now() + 1).toString(),
-        role: 'assistant',
-        content: validation.isQuestion 
-          ? `${explanation} ${getPromptForState(conversationState)}`
-          : `I need more specific information. ${getPromptForState(conversationState)}`
-      }])
-      return
+    const userMessage: ChatMessage = {
+      role: "user",
+      content: input
     }
 
-    switch (conversationState) {
-      case 'objective':
-        setCampaignDetails({
-          ...campaignDetails,
-          objective: input
-        })
-        setConversationState('audience')
-        setMessages(prev => [...prev, {
-          id: (Date.now() + 1).toString(),
-          role: 'assistant',
-          content: getPromptForState('audience')
-        }])
-        break
+    let nextAssistantMessage: ChatMessage
+    let shouldComplete = false
 
-      case 'audience':
-        setCampaignDetails({
-          ...campaignDetails,
-          targetAudience: input
-        })
-        setConversationState('region')
-        setMessages(prev => [...prev, {
-          id: (Date.now() + 1).toString(),
-          role: 'assistant',
-          content: getPromptForState('region')
-        }])
+    // Update campaign info based on current step
+    switch (step) {
+      case 1:
+        setCampaignInfo(prev => ({ ...prev, objective: input }))
+        nextAssistantMessage = {
+          role: "assistant",
+          content: "Please describe your target audience with specific demographics (e.g., age group, gender, interests, occupation)"
+        }
+        setStep(2)
         break
+      case 2:
+        setCampaignInfo(prev => ({ ...prev, target: input }))
+        nextAssistantMessage = {
+          role: "assistant",
+          content: "Which specific countries or regions are you targeting? Please list them."
+        }
+        setStep(3)
+        break
+      case 3:
+        setCampaignInfo(prev => ({ ...prev, region: input }))
+        nextAssistantMessage = {
+          role: "assistant",
+          content: "Great! I've analyzed your requirements and generated personalized recommendations. Check out the suggested games and KOLs on the left panel."
+        }
+        shouldComplete = true
+        break
+      default:
+        nextAssistantMessage = {
+          role: "assistant",
+          content: "Is there anything else you'd like to know?"
+        }
+    }
 
-      case 'region':
-        setCampaignDetails({
-          ...campaignDetails,
-          targetRegion: input
-        })
-        setConversationState('complete')
-        setIsComplete(true)
-        
-        const recommendations = generateRecommendations(
-          campaignDetails?.objective || '',
-          campaignDetails?.targetAudience || '',
-          input
-        )
-        
-        setMessages(prev => [...prev, {
-          id: (Date.now() + 1).toString(),
-          role: 'assistant',
-          content: `Great! I've analyzed your requirements and generated personalized recommendations.\n\n${recommendations}\n\nCheck out the suggested games and KOLs on the left panel.`
-        }])
-        break
+    setMessages(prev => [...prev, userMessage, nextAssistantMessage])
+    setInput("")
 
-      case 'complete':
-        // Handle any follow-up questions or additional information
-        const response = await fetch('/api/chat', {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ messages: [...messages, userMessage] })
-        })
-        const data = await response.json()
-        setMessages(prev => [...prev, {
-          id: (Date.now() + 1).toString(),
-          role: 'assistant',
-          content: data.content
-        }])
-        break
+    if (shouldComplete) {
+      const finalInfo = {
+        ...campaignInfo,
+        region: input
+      }
+      onComplete(finalInfo)
     }
   }
 
@@ -356,7 +344,7 @@ Key Features:
   }
 
   return (
-    <Card className={`${className} bg-white border-0 shadow-sm flex flex-col`}>
+    <Card className="bg-white border-0 shadow-sm flex flex-col">
       <CardHeader className="border-b border-[#46DFB1]">
         <div className="flex items-center gap-2">
           <MessageSquare className="h-5 w-5 text-[#15919B]" />
@@ -367,15 +355,17 @@ Key Features:
       </CardHeader>
       <CardContent className="flex-1 overflow-y-auto p-4" ref={chatContentRef}>
         <div className="space-y-4">
-          {messages.map((message) => (
+          {messages.map((message, i) => (
             <div
-              key={message.id}
-              className={`flex ${message.role === "assistant" ? "justify-start" : "justify-end"}`}
+              key={i}
+              className={`flex ${
+                message.role === "assistant" ? "justify-start" : "justify-end"
+              }`}
             >
               <div
                 className={`rounded-lg px-3 py-2 max-w-[80%] ${
-                  message.role === "assistant" 
-                    ? "bg-[#46DFB1]/20 text-[#213A58] flex items-start gap-2" 
+                  message.role === "assistant"
+                    ? "bg-[#46DFB1]/20 text-[#213A58] flex items-start gap-2"
                     : "bg-[#15919B] text-white"
                 }`}
               >
@@ -384,8 +374,8 @@ Key Features:
                 )}
                 <div>{message.content}</div>
               </div>
-          </div>
-        ))}
+            </div>
+          ))}
           <div ref={messagesEndRef} style={{ height: '1px' }} />
         </div>
       </CardContent>

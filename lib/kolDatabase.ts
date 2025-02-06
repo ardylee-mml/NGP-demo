@@ -248,7 +248,7 @@ export const kols: KOL[] = [
       features: ['Stage Outfits', 'Designer Accessories', 'Signature Hair']
     },
     personality: ['Charismatic', 'Energetic', 'Trendsetter'],
-    inspiration: 'ROSÉ from BLACKPINK',
+    inspiration: 'ROSE from BLACKPINK',
     suitableFor: {
       brands: ['Fashion', 'Beauty', 'Music'],
       products: ['Cosmetics', 'Fashion Items', 'Music Accessories'],
