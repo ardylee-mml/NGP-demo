@@ -1,12 +1,34 @@
 "use client"
 
 import { createContext, useContext, useState } from "react"
+import { Game } from '@/lib/gameDatabase'
+import { KOL } from '@/lib/kolDatabase'
 
 interface CampaignDetails {
-  objective?: string
-  targetAudience?: string
-  targetRegion?: string
-  budget?: string
+  objective: string
+  target: string
+  region: string
+  recommendations?: {
+    strategy: string
+    games: Game[]
+    kols: KOL[]
+    analysis: {
+      marketStrategy: {
+        reasoning: string[]
+        strategies: string[]
+      }
+      gameSelection: {
+        reasoning: string[]
+        selectedGames: Game[]
+        matchCriteria: any[]
+      }
+      kolSelection: {
+        reasoning: string[]
+        selectedKOLs: KOL[]
+        matchCriteria: any[]
+      }
+    }
+  }
 }
 
 interface MarketingCampaignContextType {
@@ -19,7 +41,11 @@ interface MarketingCampaignContextType {
 const MarketingCampaignContext = createContext<MarketingCampaignContextType | undefined>(undefined)
 
 export function MarketingCampaignProvider({ children }: { children: React.ReactNode }) {
-  const [campaignDetails, setCampaignDetails] = useState<CampaignDetails>({})
+  const [campaignDetails, setCampaignDetails] = useState<CampaignDetails>({
+    objective: '',
+    target: '',
+    region: ''
+  })
   const [isComplete, setIsComplete] = useState(false)
 
   return (

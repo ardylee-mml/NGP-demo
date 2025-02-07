@@ -26,8 +26,8 @@ const KOLRecommendations = ({ campaignInfo }: { campaignInfo: any }) => {
   const filteredKOLs = selectedKOLs.map(kol => {
     let score = 0;
     const objective = campaignDetails?.objective?.toLowerCase() || ''
-    const targetRegion = campaignDetails?.targetRegion?.toLowerCase() || ''
-    const targetAudience = campaignDetails?.targetAudience?.toLowerCase() || ''
+    const targetRegion = campaignDetails?.region?.toLowerCase() || ''
+    const targetAudience = campaignDetails?.target?.toLowerCase() || ''
 
     // Score by region match
     if (kol.regions.some(region => 

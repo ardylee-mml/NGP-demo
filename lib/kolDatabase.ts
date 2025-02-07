@@ -31,6 +31,8 @@ export interface KOL {
   defaultAnimations: string[]  // Default animation sets
   stats: string  // Adding this to maintain existing data
   image: string
+  games: string[]
+  specialties: string[]
 }
 
 export const kols: KOL[] = [
@@ -72,7 +74,9 @@ export const kols: KOL[] = [
       'Tech Unboxing',
       'Gaming Tutorials',
       'Social Media Campaigns'
-    ]
+    ],
+    games: ["Roblox", "Minecraft"],
+    specialties: ["Game Reviews", "Live Streaming"]
   },
   {
     id: 'k2',
@@ -112,7 +116,9 @@ export const kols: KOL[] = [
       'Sports Events',
       'Training Programs',
       'Product Showcases'
-    ]
+    ],
+    games: ["Roblox", "Minecraft"],
+    specialties: ["Game Reviews", "Live Streaming"]
   },
   {
     id: 'k3',
@@ -152,7 +158,9 @@ export const kols: KOL[] = [
       'Digital Art Showcases',
       'Product Reviews',
       'Live Art Sessions'
-    ]
+    ],
+    games: ["Roblox", "Minecraft"],
+    specialties: ["Game Reviews", "Live Streaming"]
   },
   {
     id: 'k4',
@@ -192,7 +200,9 @@ export const kols: KOL[] = [
       'Brand Collaborations',
       'Beauty Tutorials',
       'Lifestyle Content'
-    ]
+    ],
+    games: ["Roblox", "Minecraft"],
+    specialties: ["Game Reviews", "Live Streaming"]
   },
   {
     id: 'k5',
@@ -232,7 +242,9 @@ export const kols: KOL[] = [
       'Premium Events',
       'Style Guides',
       'High-end Promotions'
-    ]
+    ],
+    games: ["Roblox", "Minecraft"],
+    specialties: ["Game Reviews", "Live Streaming"]
   },
 
   {
@@ -273,7 +285,9 @@ export const kols: KOL[] = [
       "Fashion Collaborations",
       "Social Media Campaigns",
       "Live Performances"
-    ]
+    ],
+    games: ["Roblox", "Minecraft"],
+    specialties: ["Game Reviews", "Live Streaming"]
   },
   {
     id: 'k7',
@@ -313,7 +327,9 @@ export const kols: KOL[] = [
       'Brand Collaborations',
       'Live Performances',
       'Social Media Campaigns'
-    ]
+    ],
+    games: ["Roblox", "Minecraft"],
+    specialties: ["Game Reviews", "Live Streaming"]
   },
   {
     id: 'k8',
@@ -353,6 +369,8 @@ export const kols: KOL[] = [
       'Beauty Endorsements',
       'Live Performances',
       'Brand Partnerships'
-    ]
+    ],
+    games: ["Roblox", "Minecraft"],
+    specialties: ["Game Reviews", "Live Streaming"]
   }
 ] 
