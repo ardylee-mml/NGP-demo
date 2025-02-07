@@ -1,65 +1,84 @@
-"use client"
+"use client";
 
-import { useState } from "react"
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
-import { Checkbox } from "@/components/ui/checkbox"
+import { useState } from "react";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Checkbox } from "@/components/ui/checkbox";
 import {
   Tooltip,
   TooltipContent,
   TooltipProvider,
   TooltipTrigger,
-} from "@/components/ui/tooltip"
-import { useMarketingCampaign } from "@/contexts/MarketingCampaignContext"
-import { KOL, kols } from "@/lib/kolDatabase"
-import { Button } from "./ui/button"
-import { KOLCustomizer } from "./KOLCustomizer"
+} from "@/components/ui/tooltip";
+import { useMarketingCampaign } from "@/contexts/MarketingCampaignContext";
+import { KOL, kols } from "@/lib/kolDatabase";
+import { Button } from "./ui/button";
+import { KOLCustomizer } from "./KOLCustomizer";
 
 const KOLRecommendations = ({ campaignInfo }: { campaignInfo: any }) => {
-  const { campaignDetails } = useMarketingCampaign()
-  const [selectedKOLs, setSelectedKOLs] = useState(kols.map((kol) => ({ 
-    ...kol, 
-    selected: false 
-  })))
-  const [selectedKOL, setSelectedKOL] = useState<KOL | null>(null)
+  const { campaignDetails } = useMarketingCampaign();
+  const [selectedKOLs, setSelectedKOLs] = useState(
+    kols.map((kol) => ({
+      ...kol,
+      selected: false,
+    }))
+  );
+  const [selectedKOL, setSelectedKOL] = useState<KOL | null>(null);
 
   // Filter and score KOLs based on campaign details
-  const filteredKOLs = selectedKOLs.map(kol => {
-    let score = 0;
-    const objective = campaignDetails?.objective?.toLowerCase() || ''
-    const targetRegion = campaignDetails?.region?.toLowerCase() || ''
-    const targetAudience = campaignDetails?.target?.toLowerCase() || ''
+  const filteredKOLs = selectedKOLs
+    .map((kol) => {
+      let score = 0;
+      const objective = campaignDetails?.objective?.toLowerCase() || "";
+      const targetRegion = campaignDetails?.region?.toLowerCase() || "";
+      const targetAudience = campaignDetails?.target?.toLowerCase() || "";
 
-    // Score by region match
-    if (kol.regions.some(region => 
-      targetRegion.includes(region.toLowerCase()))) score += 3
+      // Score by region match
+      if (
+        kol.regions.some((region) =>
+          targetRegion.includes(region.toLowerCase())
+        )
+      )
+        score += 3;
 
-    // Score by audience match
-    if (kol.audience.interests.some(interest => 
-      targetAudience.includes(interest.toLowerCase()))) score += 2
+      // Score by audience match
+      if (
+        kol.audience.interests.some((interest) =>
+          targetAudience.includes(interest.toLowerCase())
+        )
+      )
+        score += 2;
 
-    // Score by marketing capabilities
-    if (objective.includes('awareness') && 
-        kol.marketingCapabilities.some(cap => 
-          cap.toLowerCase().includes('brand') || 
-          cap.toLowerCase().includes('awareness'))) score += 2
+      // Score by marketing capabilities
+      if (
+        objective.includes("awareness") &&
+        kol.marketingCapabilities.some(
+          (cap) =>
+            cap.toLowerCase().includes("brand") ||
+            cap.toLowerCase().includes("awareness")
+        )
+      )
+        score += 2;
 
-    // Score by engagement rate
-    const engagementRate = parseFloat(kol.engagementRate)
-    if (engagementRate > 8) score += 3
-    else if (engagementRate > 5) score += 2
+      // Score by engagement rate
+      const engagementRate = parseFloat(kol.engagementRate);
+      if (engagementRate > 8) score += 3;
+      else if (engagementRate > 5) score += 2;
 
-    return {
-      ...kol,
-      score
-    }
-  }).filter(kol => kol.score > 0)
-    .sort((a, b) => b.score - a.score)
+      return {
+        ...kol,
+        score,
+      };
+    })
+    .filter((kol) => kol.score > 0)
+    .sort((a, b) => b.score - a.score);
 
   const handleKOLSelection = (id: string) => {
-    setSelectedKOLs(selectedKOLs.map((kol) => 
-      kol.id === id ? { ...kol, selected: !kol.selected } : kol
-    ))
-  }
+    setSelectedKOLs(
+      selectedKOLs.map((kol) =>
+        kol.id === id ? { ...kol, selected: !kol.selected } : kol
+      )
+    );
+  };
 
   return (
     <div className="bg-white rounded-lg shadow p-6">
@@ -84,15 +103,19 @@ const KOLRecommendations = ({ campaignInfo }: { campaignInfo: any }) => {
                 <Tooltip>
                   <TooltipTrigger asChild>
                     <p className="text-[#86868b] text-xs truncate">
-                      {kol.personality.join(', ')}
+                      {kol.personality.join(", ")}
                     </p>
                   </TooltipTrigger>
                   <TooltipContent className="max-w-[300px] p-3">
                     <p className="text-sm">
-                      <strong>Type:</strong> {kol.characterType}<br/>
-                      <strong>Regions:</strong> {kol.regions.join(', ')}<br/>
-                      <strong>Stats:</strong> {kol.stats}<br/>
-                      <strong>Marketing:</strong> {kol.marketingCapabilities.join(', ')}
+                      <strong>Type:</strong> {kol.characterType}
+                      <br />
+                      <strong>Regions:</strong> {kol.regions.join(", ")}
+                      <br />
+                      <strong>Stats:</strong> {kol.stats}
+                      <br />
+                      <strong>Marketing:</strong>{" "}
+                      {kol.marketingCapabilities.join(", ")}
                     </p>
                   </TooltipContent>
                 </Tooltip>
@@ -116,7 +139,7 @@ const KOLRecommendations = ({ campaignInfo }: { campaignInfo: any }) => {
         onClose={() => setSelectedKOL(null)}
       />
     </div>
-  )
-}
+  );
+};
 
-export default KOLRecommendations
+export default KOLRecommendations;
