@@ -1,15 +1,13 @@
-"use client"
+"use client";
 
-import CampaignPlanner from '@/components/CampaignPlanner'
-import { MarketingCampaignProvider } from "@/contexts/MarketingCampaignContext"
+import { Chatbot } from "@/components/Chatbot";
 
 export default function Home() {
   return (
-    <MarketingCampaignProvider>
-      <main className="min-h-screen bg-[#f5f5f7]">
-        <CampaignPlanner />
-      </main>
-    </MarketingCampaignProvider>
-  )
+    <div className="container mx-auto p-4">
+      <div className="max-w-2xl mx-auto">
+        <Chatbot />
+      </div>
+    </div>
+  );
 }
-

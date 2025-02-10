@@ -1,6 +1,15 @@
 /** @type {import('next').NextConfig} */
 const nextConfig = {
-  // your config options here
+  env: {
+    DEEPSEEK_API_KEY: process.env.DEEPSEEK_API_KEY,
+  },
+  api: {
+    responseLimit: false,
+    bodyParser: {
+      sizeLimit: '1mb',
+    },
+    externalResolver: true,
+  }
 }
 
 module.exports = nextConfig 

@@ -1,67 +1,111 @@
-"use client"
+"use client";
 
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
-import { useMarketingCampaign } from "@/contexts/MarketingCampaignContext"
+import { Card, CardContent } from "@/components/ui/card";
+import { useMarketingCampaign } from "@/contexts/MarketingCampaignContext";
+import { useState, useEffect } from "react";
+import { LoadingSpinner } from "@/components/ui/loading-spinner";
 
 const CampaignSummary = ({ info }: { info: any }) => {
-  const getStrategyExplanation = () => {
-    const objective = info.objective?.toLowerCase() || ''
-    const audience = info.target?.toLowerCase() || ''
-    const region = info.region?.toLowerCase() || ''
+  const [analysis, setAnalysis] = useState<any>(null);
+  const [isLoading, setIsLoading] = useState(false);
 
-    return {
-      gameStrategy: objective.includes('launch') 
-        ? "Focus on games with virtual event capabilities for product showcases"
-        : objective.includes('awareness')
-        ? "Target high DAU games for maximum visibility and brand exposure"
-        : "Leverage games with strong social features for engagement",
+  useEffect(() => {
+    const getAnalysis = async () => {
+      setIsLoading(true);
+      try {
+        const result = await analyzeCampaignDetails();
+        setAnalysis(result);
+      } catch (error) {
+        console.error("Error getting analysis:", error);
+      } finally {
+        setIsLoading(false);
+      }
+    };
 
-      audienceMatch: audience.includes('stem') || audience.includes('tech')
-        ? "Prioritize educational and simulation games"
-        : audience.includes('young')
-        ? "Focus on social and competitive games"
-        : "Balance of casual and core gaming experiences",
-
-      regionalFocus: region.includes('asia')
-        ? "Emphasis on mobile-first games popular in Asian markets"
-        : region.includes('usa')
-        ? "Mix of PC and mobile titles strong in Western markets"
-        : "Diverse platform approach for global reach"
+    if (info.objective) {
+      getAnalysis();
     }
-  }
+  }, [info]);
 
-  const strategy = getStrategyExplanation()
+  const analyzeCampaignDetails = async () => {
+    const response = await fetch("/api/deepseek", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({
+        prompt: `Analyze this campaign for Roblox implementation and provide specific insights:
+Objective: ${info.objective}
+Target Audience: ${info.target}
+Region: ${info.region}
+
+Return a JSON object with these fields:
+- gameTypeRecommendation: Suggest 1-2 Roblox game genres/types that would best fit this campaign
+- gameplayElements: List 2-3 specific gameplay mechanics or features to implement (e.g. collectibles, mini-games, social features)
+- engagementMechanics: Recommend 2-3 Roblox-specific ways to drive user engagement (e.g. special items, limited time events)
+- platformConsiderations: Brief note on any region-specific or audience-specific Roblox platform considerations
+
+Keep each analysis point under 150 characters and focus on actionable Roblox implementation details.`,
+      }),
+    });
+
+    const data = await response.json();
+    return data;
+  };
 
   return (
-    <div className="bg-white rounded-lg shadow p-6">
+    <div className="space-y-6">
       <h2 className="text-xl font-bold mb-4">Campaign Strategy</h2>
       <div className="space-y-6">
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-          <div>
-            <h3 className="font-semibold text-gray-600">Objective</h3>
-            <p>{info.objective}</p>
+        {isLoading ? (
+          <div className="flex justify-center p-8">
+            <LoadingSpinner />
           </div>
-          <div>
-            <h3 className="font-semibold text-gray-600">Target Audience</h3>
-            <p>{info.target}</p>
-          </div>
-          <div>
-            <h3 className="font-semibold text-gray-600">Region</h3>
-            <p>{info.region}</p>
-          </div>
-        </div>
-        
-        <div className="border-t pt-4">
-          <h3 className="font-semibold text-gray-600 mb-3">Recommended Strategy</h3>
-          <div className="space-y-2 text-sm text-gray-600">
-            <p>• {strategy.gameStrategy}</p>
-            <p>• {strategy.audienceMatch}</p>
-            <p>• {strategy.regionalFocus}</p>
-          </div>
-        </div>
+        ) : (
+          <>
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+              <div>
+                <h3 className="font-semibold text-gray-700">Objective</h3>
+                <p className="mt-1 text-gray-600">{info.objective}</p>
+              </div>
+              <div>
+                <h3 className="font-semibold text-gray-700">Target Audience</h3>
+                <p className="mt-1 text-gray-600">{info.target}</p>
+              </div>
+              <div>
+                <h3 className="font-semibold text-gray-700">Region</h3>
+                <p className="mt-1 text-gray-600">{info.region}</p>
+              </div>
+            </div>
+
+            {analysis && (
+              <div className="space-y-4">
+                <h3 className="font-semibold text-gray-700">
+                  Roblox Campaign Strategy
+                </h3>
+                <div className="space-y-2 text-sm text-gray-600">
+                  <p>
+                    <strong>Recommended Game Types:</strong>{" "}
+                    {analysis.gameTypeRecommendation}
+                  </p>
+                  <p>
+                    <strong>Gameplay Elements:</strong>{" "}
+                    {analysis.gameplayElements}
+                  </p>
+                  <p>
+                    <strong>Engagement Mechanics:</strong>{" "}
+                    {analysis.engagementMechanics}
+                  </p>
+                  <p>
+                    <strong>Platform Considerations:</strong>{" "}
+                    {analysis.platformConsiderations}
+                  </p>
+                </div>
+              </div>
+            )}
+          </>
+        )}
       </div>
     </div>
-  )
-}
+  );
+};
 
-export default CampaignSummary 
+export default CampaignSummary;

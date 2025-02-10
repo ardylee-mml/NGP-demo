@@ -1,145 +1,53 @@
 "use client";
 
-import { useState } from "react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { Checkbox } from "@/components/ui/checkbox";
-import {
-  Tooltip,
-  TooltipContent,
-  TooltipProvider,
-  TooltipTrigger,
-} from "@/components/ui/tooltip";
-import { useMarketingCampaign } from "@/contexts/MarketingCampaignContext";
-import { KOL, kols } from "@/lib/kolDatabase";
-import { Button } from "./ui/button";
-import { KOLCustomizer } from "./KOLCustomizer";
 
-const KOLRecommendations = ({ campaignInfo }: { campaignInfo: any }) => {
-  const { campaignDetails } = useMarketingCampaign();
-  const [selectedKOLs, setSelectedKOLs] = useState(
-    kols.map((kol) => ({
-      ...kol,
-      selected: false,
-    }))
-  );
-  const [selectedKOL, setSelectedKOL] = useState<KOL | null>(null);
+export default function KOLRecommendations({
+  campaignInfo,
+}: {
+  campaignInfo: any;
+}) {
+  console.log("KOLRecommendations received:", campaignInfo);
 
-  // Filter and score KOLs based on campaign details
-  const filteredKOLs = selectedKOLs
-    .map((kol) => {
-      let score = 0;
-      const objective = campaignDetails?.objective?.toLowerCase() || "";
-      const targetRegion = campaignDetails?.region?.toLowerCase() || "";
-      const targetAudience = campaignDetails?.target?.toLowerCase() || "";
-
-      // Score by region match
-      if (
-        kol.regions.some((region) =>
-          targetRegion.includes(region.toLowerCase())
-        )
-      )
-        score += 3;
-
-      // Score by audience match
-      if (
-        kol.audience.interests.some((interest) =>
-          targetAudience.includes(interest.toLowerCase())
-        )
-      )
-        score += 2;
-
-      // Score by marketing capabilities
-      if (
-        objective.includes("awareness") &&
-        kol.marketingCapabilities.some(
-          (cap) =>
-            cap.toLowerCase().includes("brand") ||
-            cap.toLowerCase().includes("awareness")
-        )
-      )
-        score += 2;
-
-      // Score by engagement rate
-      const engagementRate = parseFloat(kol.engagementRate);
-      if (engagementRate > 8) score += 3;
-      else if (engagementRate > 5) score += 2;
-
-      return {
-        ...kol,
-        score,
-      };
-    })
-    .filter((kol) => kol.score > 0)
-    .sort((a, b) => b.score - a.score);
-
-  const handleKOLSelection = (id: string) => {
-    setSelectedKOLs(
-      selectedKOLs.map((kol) =>
-        kol.id === id ? { ...kol, selected: !kol.selected } : kol
-      )
-    );
-  };
+  // Access recommendedKOLs directly from recommendations
+  const kols = campaignInfo?.recommendations?.recommendedKOLs;
+  if (!kols?.length) {
+    console.log("No KOL recommendations found");
+    return null;
+  }
 
   return (
-    <div className="bg-white rounded-lg shadow p-6">
-      <h2 className="text-xl font-bold mb-4">Recommended KOLs</h2>
-      <div className="space-y-6">
-        {filteredKOLs.map((kol) => (
-          <div
-            key={kol.id}
-            className="flex items-start gap-3 p-2 rounded-xl bg-[#f5f5f7] transition-transform hover:-translate-y-0.5"
-          >
-            <img
-              src={kol.image}
-              alt={kol.name}
-              className="w-10 h-10 rounded-lg object-cover flex-shrink-0"
-              draggable="false"
-            />
-            <div className="flex-grow min-w-0 py-0.5">
-              <h3 className="text-[#1d1d1f] font-medium text-sm mb-0.5 line-clamp-2">
-                {kol.name} - {kol.characterType}
-              </h3>
-              <TooltipProvider>
-                <Tooltip>
-                  <TooltipTrigger asChild>
-                    <p className="text-[#86868b] text-xs truncate">
-                      {kol.personality.join(", ")}
-                    </p>
-                  </TooltipTrigger>
-                  <TooltipContent className="max-w-[300px] p-3">
-                    <p className="text-sm">
-                      <strong>Type:</strong> {kol.characterType}
-                      <br />
-                      <strong>Regions:</strong> {kol.regions.join(", ")}
-                      <br />
-                      <strong>Stats:</strong> {kol.stats}
-                      <br />
-                      <strong>Marketing:</strong>{" "}
-                      {kol.marketingCapabilities.join(", ")}
-                    </p>
-                  </TooltipContent>
-                </Tooltip>
-              </TooltipProvider>
+    <Card>
+      <CardHeader>
+        <CardTitle>Recommended KOLs</CardTitle>
+      </CardHeader>
+      <CardContent className="space-y-4">
+        {kols.map((kol: any) => (
+          <div key={kol.id} className="flex gap-4 p-4 bg-gray-50 rounded-lg">
+            <div className="w-24 h-24 bg-gray-200 rounded-lg overflow-hidden">
+              <img
+                src={kol.image || "/placeholder-kol.jpg"}
+                alt={kol.name}
+                className="w-full h-full object-cover"
+              />
             </div>
-            <Button
-              variant="outline"
-              size="sm"
-              onClick={() => setSelectedKOL(kol)}
-              className="flex-shrink-0 mt-1"
-            >
-              Customize
-            </Button>
+            <div>
+              <h3 className="font-medium">{kol.name}</h3>
+              <p className="text-sm text-gray-600">{kol.characterType}</p>
+              <div className="mt-2 flex flex-wrap gap-2">
+                {kol.categories.map((category: string) => (
+                  <span
+                    key={category}
+                    className="text-xs bg-green-100 text-green-800 px-2 py-1 rounded"
+                  >
+                    {category}
+                  </span>
+                ))}
+              </div>
+            </div>
           </div>
         ))}
-      </div>
-
-      <KOLCustomizer
-        kol={selectedKOL}
-        isOpen={!!selectedKOL}
-        onClose={() => setSelectedKOL(null)}
-      />
-    </div>
+      </CardContent>
+    </Card>
   );
-};
-
-export default KOLRecommendations;
+}

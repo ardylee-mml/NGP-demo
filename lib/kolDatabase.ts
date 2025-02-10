@@ -12,11 +12,7 @@ export interface KOL {
   }
   regions: string[]
   platforms: string[]
-  audience: {
-    size: string
-    ageRange: string
-    interests: string[]
-  }
+  audience: string[]
   engagementRate: string
   categories: string[]
   previousBrands: string[]
@@ -60,11 +56,7 @@ export const kols: KOL[] = [
     image: '/kols/TechTrix.png',
     regions: ['North America', 'Europe'],
     platforms: ['Twitch', 'YouTube', 'TikTok'],
-    audience: {
-      size: '2.5M',
-      ageRange: '16-24',
-      interests: ['Gaming', 'Technology', 'Streaming']
-    },
+    audience: ['2.5M', '16-24', 'Gaming', 'Technology', 'Streaming'],
     engagementRate: '4.8%',
     categories: ['Gaming', 'Tech', 'Entertainment'],
     previousBrands: ['Razer', 'Red Bull', 'Intel'],
@@ -102,11 +94,7 @@ export const kols: KOL[] = [
     image: '/characters/SportStar-Athlete.png',
     regions: ['North America', 'Europe'],
     platforms: ['Instagram', 'TikTok', 'YouTube'],
-    audience: {
-      size: '3.8M',
-      ageRange: '18-25',
-      interests: ['Sports', 'Fitness', 'Health']
-    },
+    audience: ['3.8M', '18-25', 'Sports', 'Fitness', 'Health'],
     engagementRate: '7.2%',
     categories: ['Sports', 'Fitness', 'Health'],
     previousBrands: ['Nike', 'Adidas', 'Under Armour'],
@@ -144,11 +132,7 @@ export const kols: KOL[] = [
     image: '/characters/ArtisticSoul-Artist.png',
     regions: ['North America', 'Europe'],
     platforms: ['Instagram', 'YouTube', 'Twitter'],
-    audience: {
-      size: '5.1M',
-      ageRange: '18-25',
-      interests: ['Art', 'Design', 'Digital']
-    },
+    audience: ['5.1M', '18-25', 'Art', 'Design', 'Digital'],
     engagementRate: '6.5%',
     categories: ['Art', 'Design', 'Digital'],
     previousBrands: ['Prismacolor', 'Wacom', 'Adobe'],
@@ -186,11 +170,7 @@ export const kols: KOL[] = [
     image: '/characters/StyleIcon-FashionInfluencer.png',
     regions: ['North America', 'Europe'],
     platforms: ['Instagram', 'TikTok', 'Pinterest'],
-    audience: {
-      size: '4.2M',
-      ageRange: '18-25',
-      interests: ['Fashion', 'Beauty', 'Shopping']
-    },
+    audience: ['4.2M', '18-25', 'Fashion', 'Beauty', 'Shopping'],
     engagementRate: '5.9%',
     categories: ['Fashion', 'Beauty', 'Shopping'],
     previousBrands: ['Gucci', 'Dior', 'Chanel'],
@@ -228,11 +208,7 @@ export const kols: KOL[] = [
     image: '/characters/JamesBond.png',
     regions: ['North America', 'Europe'],
     platforms: ['Instagram', 'YouTube', 'LinkedIn'],
-    audience: {
-      size: '2.5M',
-      ageRange: '18-25',
-      interests: ['Action', 'Spy', 'Luxury']
-    },
+    audience: ['2.5M', '18-25', 'Action', 'Spy', 'Luxury'],
     engagementRate: '4.8%',
     categories: ['Action', 'Spy', 'Luxury'],
     previousBrands: ['Bentley', 'Omega', 'Montblanc'],
@@ -271,11 +247,7 @@ export const kols: KOL[] = [
     image: '/characters/Rose.png',
     regions: ['Asia', 'North America', 'Europe'],
     platforms: ['Instagram', 'TikTok', 'YouTube'],
-    audience: {
-      size: '3.8M',
-      ageRange: '13-25',
-      interests: ['K-pop', 'Fashion', 'Music']
-    },
+    audience: ['3.8M', '13-25', 'K-pop', 'Fashion', 'Music'],
     engagementRate: '7.2%',
     categories: ['K-pop', 'Fashion', 'Music'],
     previousBrands: ["L'Oreal", "Dior", "Blackpink"],
@@ -313,11 +285,7 @@ export const kols: KOL[] = [
     image: '/characters/Eminem.png',
     regions: ['North America', 'Europe'],
     platforms: ['Instagram', 'Twitter', 'YouTube'],
-    audience: {
-      size: '5.1M',
-      ageRange: '18-25',
-      interests: ['Hip-hop', 'Rap', 'Urban']
-    },
+    audience: ['5.1M', '18-25', 'Hip-hop', 'Rap', 'Urban'],
     engagementRate: '6.5%',
     categories: ['Hip-hop', 'Rap', 'Urban'],
     previousBrands: ['Adidas', 'Apple', 'Pepsi'],
@@ -355,11 +323,7 @@ export const kols: KOL[] = [
     image: '/characters/Nicki.png',
     regions: ['North America', 'Europe'],
     platforms: ['Instagram', 'TikTok', 'Twitter'],
-    audience: {
-      size: '4.2M',
-      ageRange: '18-25',
-      interests: ['Hip-hop', 'Fashion', 'Music']
-    },
+    audience: ['4.2M', '18-25', 'Hip-hop', 'Fashion', 'Music'],
     engagementRate: '5.9%',
     categories: ['Hip-hop', 'Fashion', 'Music'],
     previousBrands: ['MAC', 'Wet n Wild', 'Fenty Beauty'],

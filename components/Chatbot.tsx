@@ -17,6 +17,11 @@ import { useMarketingCampaign } from "@/contexts/MarketingCampaignContext";
 import { games, Game } from "@/lib/gameDatabase";
 import { kols } from "@/lib/kolDatabase";
 import { DebugPanel } from "./DebugPanel";
+import { LoadingSpinner } from "./ui/loading-spinner";
+import GameRecommendations from "./GameRecommendations";
+import KOLRecommendations from "./KOLRecommendations";
+import { CampaignStrategy } from "./CampaignStrategy";
+import { useRouter } from "next/navigation";
 
 type ConversationState = "objective" | "audience" | "region" | "complete";
 
@@ -91,8 +96,8 @@ const getExplanation = (state: ConversationState): string => {
   }
 };
 
-interface ChatMessage {
-  role: "assistant" | "user";
+interface Message {
+  role: "assistant" | "user" | "system";
   content: string;
 }
 
@@ -102,50 +107,27 @@ interface CampaignInfo {
   region: string | null;
 }
 
-interface ChatbotProps {
-  onComplete: (info: {
-    objective: string;
-    target: string;
-    region: string;
-  }) => void;
-}
-
-export function Chatbot({ onComplete }: ChatbotProps) {
-  const { campaignDetails, setCampaignDetails, isComplete, setIsComplete } =
-    useMarketingCampaign();
-  const [conversationState, setConversationState] =
-    useState<ConversationState>("objective");
-
-  const [messages, setMessages] = useState<ChatMessage[]>([
+export function Chatbot() {
+  const { setCampaignDetails, setIsComplete } = useMarketingCampaign();
+  const router = useRouter();
+  const [messages, setMessages] = useState<Message[]>([
     {
       role: "assistant",
       content:
-        "👋 Hi! I'm your New Gen Pulse Campaign Assistant. I can help you create a targeted gaming marketing campaign by recommending the perfect Roblox games and In-game KOLs based on your objectives, target audience, and market. Let's start by understanding your campaign goals - what's the main objective you want to achieve?",
+        "Hi! What's the main objective of your marketing campaign? (e.g., brand awareness, product launch)",
     },
   ]);
   const [input, setInput] = useState("");
-  const [step, setStep] = useState(1);
-  const [campaignInfo, setCampaignInfo] = useState<CampaignInfo>({
-    objective: null,
-    target: null,
-    region: null,
-  });
-
-  const chatContentRef = useRef<HTMLDivElement>(null);
+  const [isLoading, setIsLoading] = useState(false);
   const messagesEndRef = useRef<HTMLDivElement>(null);
+  const [recommendations, setRecommendations] = useState<any>(null);
 
-  const [debugInfo, setDebugInfo] = useState<any>(null);
-
-  const scrollToBottom = () => {
-    if (messagesEndRef.current) {
-      messagesEndRef.current.scrollIntoView({ behavior: "smooth" });
-    }
-  };
-
+  // Scroll to bottom when messages change
   useEffect(() => {
-    scrollToBottom();
+    messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
   }, [messages]);
 
+  // Focus input when messages change
   useEffect(() => {
     const inputElement = document.querySelector(
       'input[type="text"]'
@@ -154,6 +136,205 @@ export function Chatbot({ onComplete }: ChatbotProps) {
       inputElement.focus();
     }
   }, [messages]);
+
+  // Optimized message processing
+  const processMessage = async (userMessage: string) => {
+    // Check all messages including the new one
+    const allMessages: Message[] = [
+      ...messages,
+      { role: "user" as const, content: userMessage },
+    ];
+
+    // Get the last assistant message to determine context
+    const lastAssistantMessage = [...messages]
+      .reverse()
+      .find((m) => m.role === "assistant");
+
+    // Determine what information we're collecting based on the last assistant message
+    const isAskingObjective = lastAssistantMessage?.content
+      .toLowerCase()
+      .includes("objective");
+    const isAskingAudience = lastAssistantMessage?.content
+      .toLowerCase()
+      .includes("target audience");
+    const isAskingRegion = lastAssistantMessage?.content
+      .toLowerCase()
+      .includes("region");
+
+    // Get next question based on what we have
+    let nextQuestion = "";
+    if (isAskingObjective) {
+      nextQuestion =
+        "Great! Now, who is your target audience for this campaign? Please describe their demographics (e.g., age, interests).";
+    } else if (isAskingAudience) {
+      nextQuestion =
+        "Perfect! Finally, which regions or countries are you targeting with this campaign?";
+    } else if (isAskingRegion) {
+      nextQuestion =
+        "Thanks! I'll now analyze this information to suggest the most suitable games and KOLs for your campaign.";
+    }
+
+    // Only mark as complete if we've collected all information
+    const isComplete = isAskingRegion;
+
+    // Get the response from Deepseek
+    const response = await fetch("/api/deepseek", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({
+        prompt: `${userMessage}\n\nNext question: ${nextQuestion}`,
+      }),
+    });
+
+    const data = await response.json();
+
+    return {
+      response: nextQuestion || data.response,
+      isComplete,
+      campaignDetails: isComplete
+        ? {
+            objective: extractObjective(allMessages),
+            target: extractAudience(allMessages),
+            region: extractRegion(allMessages),
+          }
+        : null,
+    };
+  };
+
+  // Helper functions to extract information
+  const extractObjective = (messages: Message[]) => {
+    // Find the user's response after the objective question
+    let foundObjective = false;
+    for (const msg of messages) {
+      if (
+        msg.role === "assistant" &&
+        msg.content.toLowerCase().includes("objective")
+      ) {
+        foundObjective = true;
+        continue;
+      }
+      if (foundObjective && msg.role === "user") {
+        return msg.content;
+      }
+    }
+    return "";
+  };
+
+  const extractAudience = (messages: Message[]) => {
+    // Find the user's response after the audience question
+    let foundAudience = false;
+    for (const msg of messages) {
+      if (
+        msg.role === "assistant" &&
+        msg.content.toLowerCase().includes("target audience")
+      ) {
+        foundAudience = true;
+        continue;
+      }
+      if (foundAudience && msg.role === "user") {
+        return msg.content;
+      }
+    }
+    return "";
+  };
+
+  const extractRegion = (messages: Message[]) => {
+    // Find the user's response after the region question
+    let foundRegion = false;
+    for (const msg of messages) {
+      if (
+        msg.role === "assistant" &&
+        msg.content.toLowerCase().includes("region")
+      ) {
+        foundRegion = true;
+        continue;
+      }
+      if (foundRegion && msg.role === "user") {
+        return msg.content;
+      }
+    }
+    return "";
+  };
+
+  // Add this function to preserve chat history
+  const preserveChatHistory = (messages: Message[]): Message[] => {
+    return messages.filter(
+      (msg) =>
+        msg.role === "user" ||
+        (msg.role === "assistant" &&
+          !msg.content.includes("Great! I have all the information needed"))
+    );
+  };
+
+  // Modify handleSubmit to preserve chat history
+  const handleSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!input.trim() || isLoading) return;
+
+    const userMessage = input.trim();
+    setInput("");
+    setIsLoading(true);
+
+    try {
+      const messageInfo = await processMessage(userMessage);
+
+      const updatedMessages: Message[] = [
+        ...messages,
+        { role: "user" as const, content: userMessage },
+        { role: "assistant" as const, content: messageInfo.response },
+      ];
+
+      setMessages(updatedMessages);
+
+      if (messageInfo.isComplete && messageInfo.campaignDetails) {
+        console.log(
+          "Campaign details before recommendations:",
+          messageInfo.campaignDetails
+        );
+
+        // Get recommendations
+        const response = await fetch("/api/recommendations", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({
+            campaignInfo: messageInfo.campaignDetails,
+          }),
+        });
+
+        const recommendationsData = await response.json();
+        console.log("Received recommendations:", recommendationsData);
+
+        // Set recommendations in local state
+        setRecommendations(recommendationsData);
+
+        // Update global state
+        setCampaignDetails({
+          ...messageInfo.campaignDetails,
+          recommendations: recommendationsData,
+        });
+        setIsComplete(true);
+
+        // Navigate to campaign plan page
+        router.push("/campaign-plan");
+      }
+    } catch (error) {
+      console.error("Chatbot error:", error);
+    }
+    setIsLoading(false);
+  };
+
+  // Add useEffect to load chat history when coming back
+  useEffect(() => {
+    const savedHistory = localStorage.getItem("chatHistory");
+    if (savedHistory) {
+      setMessages(JSON.parse(savedHistory) as Message[]);
+      localStorage.removeItem("chatHistory");
+    }
+  }, []);
+
+  const chatContentRef = useRef<HTMLDivElement>(null);
+
+  const [debugInfo, setDebugInfo] = useState<any>(null);
 
   const getPromptForState = (state: ConversationState): string => {
     switch (state) {
@@ -188,318 +369,64 @@ export function Chatbot({ onComplete }: ChatbotProps) {
     return Boolean(info.objective && info.target && info.region);
   };
 
-  // Function to analyze message and determine next steps
-  const analyzeMessage = async (userMessage: string) => {
-    try {
-      const response = await fetch("/api/chat", {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-        },
-        body: JSON.stringify({
-          messages: [...messages, { role: "user", content: userMessage }],
-          campaignInfo,
-          games,
-          kols,
-        }),
-      });
-
-      const data = await response.json();
-
-      // Add user message first
-      setMessages((prev) => [...prev, { role: "user", content: userMessage }]);
-
-      // Check if we have all required information
-      if (data.extractedInfo?.isComplete) {
-        // Add final response
-        setMessages((prev) => [
-          ...prev,
-          {
-            role: "assistant",
-            content:
-              "Great! I have all the information needed. Let me prepare your campaign recommendations with suitable games and KOLs.",
-          },
-        ]);
-
-        // Trigger transition to step 2
-        onComplete({
-          objective: data.extractedInfo.objective || "",
-          target: data.extractedInfo.audience || "",
-          region: data.extractedInfo.region || "",
-        });
-        setIsComplete(true);
-      } else {
-        // Add normal response
-        setMessages((prev) => [
-          ...prev,
-          { role: "assistant", content: data.response },
-        ]);
-      }
-    } catch (error) {
-      console.error("Error:", error);
-    }
-  };
-
-  const handleComplete = async (info: CampaignInfo) => {
-    try {
-      console.log("Sending campaign info:", info);
-
-      const response = await fetch("/api/recommendations", {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-        },
-        body: JSON.stringify({ campaignInfo: info }),
-      });
-
-      const data = await response.json();
-      console.log("Received recommendations:", data);
-
-      // Make sure analysis exists in the response
-      if (!data.recommendations.analysis) {
-        console.error("No analysis in recommendations");
-        return;
-      }
-
-      setCampaignDetails({
-        objective: info.objective || "",
-        target: info.target || "",
-        region: info.region || "",
-        recommendations: {
-          ...data.recommendations,
-          analysis: data.recommendations.analysis,
-        },
-      });
-
-      setStep(2);
-    } catch (error) {
-      console.error("Error generating recommendations:", error);
-    }
-  };
-
-  const handleSubmit = async (e: React.FormEvent) => {
-    e.preventDefault();
-    if (!input.trim()) return;
-
-    setInput("");
-    await analyzeMessage(input);
-  };
-
-  // Add this function to generate the summary
-  const generateCampaignSummary = (
-    objective: string,
-    audience: string,
-    region: string
-  ) => {
-    // Get game recommendations based on criteria
-    const gameRec = objective.toLowerCase().includes("awareness")
-      ? "Adventure Quest & Rocket League (high visibility)"
-      : objective.toLowerCase().includes("launch")
-      ? "City Skylines & Among Us (virtual events)"
-      : "Mix of social & competitive games";
-
-    // Get audience-specific recommendations
-    const audienceRec =
-      audience.toLowerCase().includes("young") ||
-      audience.toLowerCase().includes("teen")
-        ? "Rocket League & Among Us (social features)"
-        : "City Skylines (professional integration)";
-
-    // Get region-specific note
-    const regionRec = region.toLowerCase().includes("asia")
-      ? "Among Us (strong in South Korea, Indonesia)"
-      : region.toLowerCase().includes("europe")
-      ? "Adventure Quest & Rocket League (UK, Germany)"
-      : "All games have presence in target regions";
-
-    return ` Campaign Summary:
-• Objective: ${objective}
-• Audience: ${audience}
-• Region: ${region}
-
-🎮 Recommended Games:
-• ${gameRec}
-• ${audienceRec}
-• ${regionRec}
-
-✨ Check out the filtered recommendations on the left panel.`;
-  };
-
-  // Change this function name
-  const generateStrategyRecommendations = (
-    objective: string,
-    audience: string,
-    region: string
-  ): string => {
-    const objectiveLower = objective.toLowerCase();
-    const audienceLower = audience.toLowerCase();
-    const regionLower = region.toLowerCase();
-
-    // Filter games based on objective
-    let recommendedGames = games.filter((game) => {
-      if (objectiveLower.includes("awareness")) {
-        return game.marketingCapabilities.includes("Brand Integration");
-      }
-      if (objectiveLower.includes("launch")) {
-        return game.marketingCapabilities.includes("Custom Events");
-      }
-      if (objectiveLower.includes("sales")) {
-        return game.marketingCapabilities.includes("Product Placement");
-      }
-      return true;
-    });
-
-    // Further filter by audience
-    recommendedGames = recommendedGames.filter((game) => {
-      const [minAge] = game.audience.ageRange.split("-").map(Number);
-      if (audienceLower.includes("young") || audienceLower.includes("teen")) {
-        return minAge <= 25;
-      }
-      if (
-        audienceLower.includes("professional") ||
-        audienceLower.includes("business")
-      ) {
-        return minAge >= 25;
-      }
-      return true;
-    });
-
-    // Filter by region
-    recommendedGames = recommendedGames.filter((game) => {
-      if (regionLower.includes("asia")) {
-        return game.regions.includes("Asia");
-      }
-      if (regionLower.includes("europe")) {
-        return game.regions.includes("Europe");
-      }
-      return true;
-    });
-
-    // Generate strategy text based on filtered games
-    const strategies = recommendedGames.map((game) => {
-      const relevantFeatures = game.marketingCapabilities
-        .filter((cap) => {
-          if (objectiveLower.includes("awareness"))
-            return cap.includes("Brand");
-          if (objectiveLower.includes("launch")) return cap.includes("Events");
-          return true;
-        })
-        .join(", ");
-
-      return `• ${game.name}: ${relevantFeatures}`;
-    });
-
-    return `Recommendation Strategy:
-${strategies.join("\n")}
-
-Key Features:
-• ${getAudienceSpecificFeatures(recommendedGames, audienceLower)}
-• ${getRegionSpecificAdvantages(recommendedGames, regionLower)}
-• ${getObjectiveSpecificStrategy(recommendedGames, objectiveLower)}`;
-  };
-
-  // Helper functions for specific recommendations
-  const getAudienceSpecificFeatures = (
-    games: Game[],
-    audience: string
-  ): string => {
-    const features = games
-      .flatMap((game) => game.features)
-      .filter((feature) => {
-        if (audience.includes("young")) return feature.includes("Social");
-        if (audience.includes("professional"))
-          return feature.includes("Professional");
-        return true;
-      });
-    return features.length > 0
-      ? `Featuring ${features.join(", ")} to engage ${audience} audience`
-      : "Customized features for target audience";
-  };
-
-  // Add these functions before the return statement
-  const getRegionSpecificAdvantages = (
-    games: Game[],
-    region: string
-  ): string => {
-    const regions = games
-      .flatMap((game) => game.regions)
-      .filter((r) => r.toLowerCase().includes(region.toLowerCase()));
-    return regions.length > 0
-      ? `Strong presence in ${regions.join(", ")} markets`
-      : "Global market presence";
-  };
-
-  const getObjectiveSpecificStrategy = (
-    games: Game[],
-    objective: string
-  ): string => {
-    const capabilities = games
-      .flatMap((game) => game.marketingCapabilities)
-      .filter((cap) => cap.toLowerCase().includes(objective.toLowerCase()));
-    return capabilities.length > 0
-      ? capabilities.join(", ")
-      : "Flexible marketing options available";
-  };
-
   return (
-    <div className="relative">
-      <Card className="bg-white border-0 shadow-sm flex flex-col">
-        <CardHeader className="border-b border-[#46DFB1]">
-          <div className="flex items-center gap-2">
-            <MessageSquare className="h-5 w-5 text-[#15919B]" />
-            <CardTitle className="text-[#213A58] text-xl font-semibold">
-              New Gen Pulse Campaign Assistant
-            </CardTitle>
-          </div>
-        </CardHeader>
-        <CardContent
-          className="flex-1 overflow-y-auto p-4"
-          ref={chatContentRef}
-        >
-          <div className="space-y-4">
-            {messages.map((message, i) => (
+    <div className="grid grid-cols-1 md:grid-cols-2 gap-4 h-full">
+      {/* Chat Section */}
+      <div className="flex flex-col h-full bg-white rounded-lg shadow-lg">
+        <div className="flex-1 overflow-y-auto p-4 space-y-4">
+          {messages.map((message, index) => (
+            <div
+              key={index}
+              className={`flex ${
+                message.role === "assistant" ? "justify-start" : "justify-end"
+              }`}
+            >
               <div
-                key={i}
-                className={`flex ${
-                  message.role === "assistant" ? "justify-start" : "justify-end"
+                className={`max-w-[80%] rounded-lg p-3 ${
+                  message.role === "assistant"
+                    ? "bg-gray-100 text-gray-800"
+                    : "bg-blue-500 text-white"
                 }`}
               >
-                <div
-                  className={`rounded-lg px-3 py-2 max-w-[80%] ${
-                    message.role === "assistant"
-                      ? "bg-[#46DFB1]/20 text-[#213A58] flex items-start gap-2"
-                      : "bg-[#15919B] text-white"
-                  }`}
-                >
-                  {message.role === "assistant" && (
-                    <Sparkles className="h-4 w-4 mt-1 text-[#15919B]" />
-                  )}
-                  <div>{message.content}</div>
-                </div>
+                {message.content}
               </div>
-            ))}
-            <div ref={messagesEndRef} style={{ height: "1px" }} />
-          </div>
-        </CardContent>
-        <div className="border-t border-[#46DFB1] p-4">
-          <form onSubmit={handleSubmit} className="flex items-center space-x-2">
-            <Input
-              className="flex-1 border-[#46DFB1] focus:ring-[#15919B]"
-              value={input}
-              onChange={(e) => setInput(e.target.value)}
-              placeholder="Type your message..."
-            />
-            <Button
-              type="submit"
-              size="icon"
-              className="bg-[#15919B] hover:bg-[#0C6478] text-white"
-            >
-              <Send className="h-4 w-4" />
-            </Button>
-          </form>
+            </div>
+          ))}
+          {isLoading && (
+            <div className="flex justify-start">
+              <div className="max-w-[80%] rounded-lg p-3 bg-gray-100">
+                <LoadingSpinner />
+              </div>
+            </div>
+          )}
+          <div ref={messagesEndRef} />
         </div>
-      </Card>
-      {debugInfo && <DebugPanel info={debugInfo} />}
+
+        <form onSubmit={handleSubmit} className="p-4 border-t">
+          <input
+            type="text"
+            value={input}
+            onChange={(e) => setInput(e.target.value)}
+            placeholder="Type your message..."
+            className="w-full p-2 border rounded"
+          />
+        </form>
+      </div>
+
+      {/* Recommendations Section */}
+      <div className="h-full overflow-y-auto">
+        {recommendations && (
+          <div className="space-y-4 p-4">
+            <CampaignStrategy campaignInfo={{ recommendations }} />
+            {recommendations.recommendedGames?.length > 0 && (
+              <GameRecommendations campaignInfo={{ recommendations }} />
+            )}
+            {recommendations.recommendedKOLs?.length > 0 && (
+              <KOLRecommendations campaignInfo={{ recommendations }} />
+            )}
+          </div>
+        )}
+      </div>
     </div>
   );
 }

@@ -1,5 +1,5 @@
-import { Game } from './gameDatabase'
-import { KOL } from './kolDatabase'
+import { Game, games } from './gameDatabase'
+import { KOL, kols } from './kolDatabase'
 
 interface MarketStrategy {
   usa: {
@@ -69,118 +69,78 @@ export class RecommendationService {
     })
   }
 
-  generateRecommendations(objective: string, audience: string, regions: string[], games: Game[], kols: KOL[]) {
-    // Debug logging
-    console.log('Generating recommendations for:', {
-      objective,
-      audience,
-      regions,
-      availableGames: games.length,
-      availableKOLs: kols.length
-    })
+  generateRecommendations(objective: string, target: string, region: string[], games: Game[], kols: KOL[]) {
+    console.log("Generating recommendations for:", { objective, target, region });
 
-    const targetRegions = regions.map(r => r.toLowerCase())
-    const hasUSA = targetRegions.some(r => r.includes('usa') || r.includes('us'))
-    const hasAsia = targetRegions.some(r => r.includes('asia'))
+    // Filter games based on campaign criteria
+    const recommendedGames = games.filter(game => {
+      const matchesObjective = game.marketingCapabilities.some(cap =>
+        cap.toLowerCase().includes('launch') || 
+        cap.toLowerCase().includes('brand') ||
+        cap.toLowerCase().includes('product')
+      );
+      
+      const matchesAudience = game.audience.interests.some(interest =>
+        target.toLowerCase().includes(interest.toLowerCase()) ||
+        interest.toLowerCase().includes('social') ||
+        interest.toLowerCase().includes('lifestyle')
+      );
+      
+      const matchesRegion = game.regions.some(r =>
+        region.some(reg => {
+          const regionLower = reg.toLowerCase();
+          return regionLower.includes(r.toLowerCase()) ||
+                 (regionLower.includes('usa') && r.includes('North America'));
+        })
+      );
+      
+      const isRecommended = matchesObjective || (matchesAudience && matchesRegion);
+      console.log(`Game ${game.name} matches:`, { matchesObjective, matchesAudience, matchesRegion });
+      return isRecommended;
+    });
 
-    // Market strategy based on regions combination
-    const marketStrategy = {
-      reasoning: [],
-      strategies: []
-    }
+    // Filter KOLs based on campaign criteria
+    const recommendedKOLs = kols.filter(kol => {
+      const matchesAudience = kol.audience.some(aud => {
+        const targetLower = target.toLowerCase();
+        const audLower = aud.toLowerCase();
+        return targetLower.includes(audLower) ||
+               audLower.includes('fashion') ||
+               audLower.includes('sports') ||
+               audLower.includes(targetLower);
+      });
+      
+      const matchesRegion = kol.regions.some(r =>
+        region.some(reg => {
+          const regionLower = reg.toLowerCase();
+          return regionLower.includes(r.toLowerCase()) ||
+                 (regionLower.includes('usa') && r.includes('North America'));
+        })
+      );
+      
+      // Relaxed game matching
+      const playsRelevantGames = kol.games.some(game => 
+        game.toLowerCase().includes('roblox')
+      );
+      
+      const isRecommended = (matchesAudience || matchesRegion) && playsRelevantGames;
+      console.log(`KOL ${kol.name} matches:`, { matchesAudience, matchesRegion, playsRelevantGames });
+      return isRecommended;
+    });
 
-    if (hasUSA && hasAsia) {
-      marketStrategy.reasoning.push(
-        'Campaign targets both US and Asian markets',
-        'Need balanced approach between Western and Eastern gaming preferences',
-        'Consider platform differences between regions'
-      )
-      marketStrategy.strategies = [
-        'Cross-platform campaign utilizing both PC/Console and Mobile',
-        'Region-specific content and KOL partnerships',
-        'Balanced marketing mix for different gaming cultures'
-      ]
-    } else if (hasUSA) {
-      marketStrategy.reasoning.push(
-        'Focus on US market preferences',
-        'Strong PC and Console gaming presence'
-      )
-      marketStrategy.strategies = marketStrategies.usa.marketingStyle
-    } else if (hasAsia) {
-      marketStrategy.reasoning.push(
-        'Focus on Asian market preferences',
-        'Mobile gaming dominance'
-      )
-      marketStrategy.strategies = marketStrategies.asia.marketingStyle
-    }
-
-    // Game selection with detailed reasoning
-    const matchedGames = this.matchAudiencePreference(audience, 
-      this.analyzeMarketFit(targetRegions, games)
-    )
-    console.log('Matched Games Analysis:', {
-      totalMatched: matchedGames.length,
-      matchedGames: matchedGames.map(g => g.name),
-      regionFilters: { hasUSA, hasAsia }
-    })
-
-    const gameSelection = {
-      reasoning: [
-        `Found ${matchedGames.length} games matching regional requirements`,
-        `Games suitable for audience: ${audience}`,
-        `Supporting campaign objective: ${objective}`
-      ],
-      selectedGames: matchedGames,
-      matchCriteria: matchedGames.map(game => ({
-        game: game.name,
-        reasons: [
-          hasUSA && game.regions.includes('North America') ? 'US market presence' : '',
-          hasAsia && game.regions.includes('Asia') ? 'Asian market presence' : '',
-          `Suitable for ${audience}`,
-          `Supports ${objective} campaigns`
-        ].filter(Boolean)
-      }))
-    }
-
-    // KOL selection with reasoning
-    const relevantKOLs = this.findRelevantKOLs(matchedGames, audience, targetRegions)
-    console.log('KOL Selection Analysis:', {
-      totalMatched: relevantKOLs.length,
-      matchedKOLs: relevantKOLs.map(k => k.name)
-    })
-
-    const analysis = {
-      marketStrategy,
-      gameSelection,
-      kolSelection: {
-        reasoning: [
-          `Selected ${relevantKOLs.length} KOLs matching campaign criteria`,
-          `KOLs with presence in target regions: ${regions.join(', ')}`,
-          `Influencers matching audience: ${audience}`
-        ],
-        selectedKOLs: relevantKOLs,
-        matchCriteria: relevantKOLs.map(kol => ({
-          kol: kol.name,
-          reasons: [
-            `Audience match: ${kol.audience.join(', ')}`,
-            `Regional presence: ${kol.regions.join(', ')}`,
-            `Relevant games: ${kol.games.join(', ')}`
-          ]
-        }))
-      }
-    }
-
-    // Log final analysis
-    console.log('Final Recommendation Analysis:', analysis)
+    console.log("Final recommendations:", { recommendedGames, recommendedKOLs });
 
     return {
-      recommendedGames: matchedGames.slice(0, 3),
-      recommendedKOLs: relevantKOLs.slice(0, 3),
-      marketingStrategies: analysis.marketStrategy.strategies,
-      platformFocus: this.getPlatformRecommendations(targetRegions),
-      contentStrategy: this.getContentStrategy(targetRegions, objective),
-      analysis
-    }
+      recommendedGames,
+      recommendedKOLs,
+      analysis: {
+        gameStrategy: "Focus on games with high social interaction and fashion/lifestyle elements",
+        audienceMatch: "Target fashion-conscious gamers and social media enthusiasts",
+        regionalFocus: region.some(r => r.toLowerCase().includes('asia')) 
+          ? "Emphasize mobile and social platforms with fashion integration"
+          : "Focus on cross-platform presence with lifestyle elements"
+      }
+    };
   }
 
   private getPlatformRecommendations(regions: string[]): string[] {

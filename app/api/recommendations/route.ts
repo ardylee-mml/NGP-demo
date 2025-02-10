@@ -1,32 +1,40 @@
 import { NextResponse } from 'next/server'
-import { RecommendationService } from '@/lib/recommendationService'
 import { games } from '@/lib/gameDatabase'
 import { kols } from '@/lib/kolDatabase'
+import { RecommendationService } from '@/lib/recommendationService'
 
-export async function POST(req: Request) {
-  const { campaignInfo } = await req.json()
-  const recommendationService = new RecommendationService()
-  
-  // Log incoming request
-  console.log('Processing campaign request:', campaignInfo)
+export async function POST(request: Request) {
+  try {
+    const { campaignInfo } = await request.json()
+    console.log("API - Received campaign info:", campaignInfo)
+    
+    const recommendationService = new RecommendationService()
+    
+    // Convert region string to array
+    const regionArray = campaignInfo.region
+      .toLowerCase()
+      .split(/and|,/)
+      .map((r: string) => r.trim())
 
-  const recommendations = recommendationService.generateRecommendations(
-    campaignInfo.objective,
-    campaignInfo.target,
-    campaignInfo.region.split(' and '),
-    games,
-    kols
-  )
+    console.log("API - Processing with regions:", regionArray)
+    
+    const recommendations = recommendationService.generateRecommendations(
+      campaignInfo.objective,
+      campaignInfo.target,
+      regionArray,
+      games,
+      kols
+    )
 
-  console.log('Generated recommendations:', recommendations)
-  console.log('Analysis:', recommendations.analysis)
+    console.log("API - Generated recommendations:", recommendations)
+    return NextResponse.json(recommendations)
 
-  return NextResponse.json({ 
-    recommendations: {
-      strategy: recommendations.marketingStrategies.join('\n'),
-      games: recommendations.recommendedGames,
-      kols: recommendations.recommendedKOLs,
-      analysis: recommendations.analysis // Make sure this exists
-    }
-  })
+  } catch (error) {
+    console.error('Recommendation API error:', error)
+    return NextResponse.json({
+      recommendedGames: [],
+      recommendedKOLs: [],
+      analysis: null
+    })
+  }
 }
