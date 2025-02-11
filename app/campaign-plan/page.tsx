@@ -9,6 +9,8 @@ import { useMarketingCampaign } from "@/contexts/MarketingCampaignContext";
 import { Button } from "@/components/ui/button";
 import { ChevronLeft } from "lucide-react";
 import Link from "next/link";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import GameplayRecommendations from "@/components/GameplayRecommendations";
 
 export default function CampaignPlan() {
   const router = useRouter();
@@ -47,22 +49,49 @@ export default function CampaignPlan() {
           <CampaignStrategy campaignInfo={campaignDetails} />
         </div>
 
-        {/* Game and KOL Recommendations side by side */}
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
-          {/* Game Recommendations on the left */}
-          <div>
-            {campaignDetails.recommendations.recommendedGames?.length > 0 && (
-              <GameRecommendations campaignInfo={campaignDetails} />
-            )}
-          </div>
+        <Tabs defaultValue="games" className="space-y-6">
+          <TabsList className="grid w-[1000px] grid-cols-3 p-1 mx-auto">
+            <TabsTrigger
+              value="games"
+              className="px-12 py-4 text-lg font-medium whitespace-nowrap transition-all data-[state=active]:bg-blue-50 data-[state=active]:text-blue-900 data-[state=active]:shadow-sm hover:bg-gray-50"
+            >
+              Recommended Games
+            </TabsTrigger>
+            <TabsTrigger
+              value="kols"
+              className="px-12 py-4 text-lg font-medium whitespace-nowrap transition-all data-[state=active]:bg-blue-50 data-[state=active]:text-blue-900 data-[state=active]:shadow-sm hover:bg-gray-50"
+            >
+              Recommended KOLs
+            </TabsTrigger>
+            <TabsTrigger
+              value="minigames"
+              className="px-12 py-4 text-lg font-medium whitespace-nowrap transition-all data-[state=active]:bg-blue-50 data-[state=active]:text-blue-900 data-[state=active]:shadow-sm hover:bg-gray-50"
+            >
+              Recommended Mini-Games
+            </TabsTrigger>
+          </TabsList>
 
-          {/* KOL Recommendations on the right */}
-          <div>
-            {campaignDetails.recommendations.recommendedKOLs?.length > 0 && (
-              <KOLRecommendations campaignInfo={campaignDetails} />
-            )}
-          </div>
-        </div>
+          <TabsContent
+            value="games"
+            className="transition-all duration-300 data-[state=inactive]:opacity-0 data-[state=active]:opacity-100"
+          >
+            <GameRecommendations campaignInfo={campaignDetails} />
+          </TabsContent>
+
+          <TabsContent
+            value="kols"
+            className="transition-all duration-300 data-[state=inactive]:opacity-0 data-[state=active]:opacity-100"
+          >
+            <KOLRecommendations campaignInfo={campaignDetails} />
+          </TabsContent>
+
+          <TabsContent
+            value="minigames"
+            className="transition-all duration-300 data-[state=inactive]:opacity-0 data-[state=active]:opacity-100"
+          >
+            <GameplayRecommendations campaignInfo={campaignDetails} />
+          </TabsContent>
+        </Tabs>
       </div>
     </div>
   );

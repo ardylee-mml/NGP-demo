@@ -1,6 +1,7 @@
 import { Game, games } from './gameDatabase'
 import { KOL, kols } from './kolDatabase'
 import OpenAI from 'openai';
+import { gameplayElements } from "@/lib/gameplayDatabase";
 
 const openai = new OpenAI({
   apiKey: process.env.DEEPSEEK_API_KEY,
@@ -168,6 +169,7 @@ export class RecommendationService {
       return {
         recommendedGames,
         recommendedKOLs,
+        recommendedMinigames: gameplayElements,
         analysis: {
           gameStrategy: aiRecommendations.gameStrategy,
           audienceMatch: aiRecommendations.audienceMatch,
@@ -223,6 +225,7 @@ export class RecommendationService {
     return {
       recommendedGames: finalGames,
       recommendedKOLs: finalKOLs,
+      recommendedMinigames: gameplayElements,
       analysis: {
         gameStrategy: "Focus on games with high social interaction and fashion/lifestyle elements",
         audienceMatch: "Target fashion-conscious gamers and social media enthusiasts",
