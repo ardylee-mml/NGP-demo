@@ -1,15 +1,12 @@
 import OpenAI from 'openai';
 import { NextResponse } from 'next/server';
 
-type ChatMessage = {
-  role: "assistant" | "user" | "system";
-  content: string;
-};
-
 const openai = new OpenAI({
-  baseURL: 'https://api.deepseek.com/v1',
   apiKey: process.env.DEEPSEEK_API_KEY,
-  timeout: 15000,
+  baseURL: 'https://api.deepseek.com/v1',
+  defaultHeaders: {
+    'Content-Type': 'application/json'
+  }
 });
 
 // Simple in-memory cache for development
@@ -18,45 +15,48 @@ const CACHE_TTL = 1000 * 60 * 60; // 1 hour in milliseconds
 
 export async function POST(request: Request) {
   try {
-    const { prompt } = await request.json();
+    const body = await request.json();
     
+    if (!process.env.DEEPSEEK_API_KEY) {
+      throw new Error('DeepSeek API key not configured');
+    }
+
+    const messages = [{
+      role: "system",
+      content: "You are a gaming marketing expert. Analyze campaign requirements and match them with game properties. Return a JSON response with recommended games and analysis."
+    }, {
+      role: "user",
+      content: `Analyze this campaign:
+        Objective: ${body.objective}
+        Target Audience: ${body.target}
+        Region: ${body.region}
+        
+        Provide recommendations in this JSON format:
+        {
+          "recommendedGames": ["game_id1", "game_id2"],
+          "gameStrategy": "strategy description",
+          "audienceMatch": "audience analysis",
+          "regionalFocus": "regional strategy"
+        }`
+    }];
+
     const completion = await openai.chat.completions.create({
       model: "deepseek-chat",
-      messages: [
-        {
-          role: "system",
-          content: `You are a friendly marketing assistant helping plan a Roblox marketing campaign.
-Guide and drive the conversation to collect these 3 key pieces of information:
-1. Campaign objective (e.g., launch, awareness)
-2. Target audience (age, demographics)
-3. Target regions/markets
-
-If objective is missing, ask about campaign goals.
-If audience is missing, ask about target demographics.
-If region is missing, ask about target markets.
-Once all information is collected, provide a summary.
-
-Keep responses under 150 characters.`
-        },
-        {
-          role: "user",
-          content: prompt
-        }
-      ],
+      messages: messages,
       temperature: 0.3,
-      max_tokens: 500
+      max_tokens: 1000,
+      response_format: { type: "json_object" }
     });
 
-    const response = completion.choices[0].message.content;
-    
     return NextResponse.json({
-      response: response || "Could you tell me more about your campaign goals?"
+      response: completion.choices[0].message.content
     });
 
   } catch (error) {
-    console.error('API route error:', error);
-    return NextResponse.json({
-      response: "Could you tell me more about your campaign goals?"
-    });
+    console.error('DeepSeek API error:', error);
+    return NextResponse.json(
+      { error: "Failed to get AI response", details: error instanceof Error ? error.message : "Unknown error" },
+      { status: 500 }
+    );
   }
 }

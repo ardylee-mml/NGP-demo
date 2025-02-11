@@ -6,6 +6,9 @@ import { CampaignStrategy } from "@/components/CampaignStrategy";
 import GameRecommendations from "@/components/GameRecommendations";
 import KOLRecommendations from "@/components/KOLRecommendations";
 import { useMarketingCampaign } from "@/contexts/MarketingCampaignContext";
+import { Button } from "@/components/ui/button";
+import { ChevronLeft } from "lucide-react";
+import Link from "next/link";
 
 export default function CampaignPlan() {
   const router = useRouter();
@@ -25,6 +28,20 @@ export default function CampaignPlan() {
   return (
     <div className="container mx-auto py-8 px-4">
       <div className="max-w-7xl mx-auto space-y-8">
+        {/* Back button */}
+        <div className="mb-6">
+          <Link href="/">
+            <Button
+              variant="outline"
+              size="sm"
+              className="flex items-center gap-2"
+            >
+              <ChevronLeft className="h-4 w-4" />
+              Back to Chat
+            </Button>
+          </Link>
+        </div>
+
         {/* Campaign Strategy at the top - full width */}
         <div className="w-full">
           <CampaignStrategy campaignInfo={campaignDetails} />

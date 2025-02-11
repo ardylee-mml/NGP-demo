@@ -53,7 +53,7 @@ export const kols: KOL[] = [
     },
     defaultAnimations: ['Victory Dance', 'Gaming Pose', 'Energetic Wave'],
     stats: 'Followers: 2.5M, Engagement Rate: 4.8%, Main Platform: Instagram',
-    image: '/kols/TechTrix.png',
+    image: '/characters/TechTrix.png',
     regions: ['North America', 'Europe'],
     platforms: ['Twitch', 'YouTube', 'TikTok'],
     audience: ['2.5M', '16-24', 'Gaming', 'Technology', 'Streaming'],

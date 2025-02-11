@@ -1,5 +1,11 @@
 import { Game, games } from './gameDatabase'
 import { KOL, kols } from './kolDatabase'
+import OpenAI from 'openai';
+
+const openai = new OpenAI({
+  apiKey: process.env.DEEPSEEK_API_KEY,
+  baseURL: 'https://api.deepseek.com/v1',
+});
 
 interface MarketStrategy {
   usa: {
@@ -52,91 +58,175 @@ export class RecommendationService {
     })
   }
 
-  findRelevantKOLs(games: Game[], audience: string, regions: string[]): KOL[] {
-    return kols.filter(kol => {
-      const playsRelevantGames = games.some(game => 
-        kol.games.includes(game.name)
-      )
-      const hasRegionalPresence = regions.some(region => 
-        kol.regions.some(kolRegion => 
-          kolRegion.toLowerCase().includes(region.toLowerCase())
-        )
-      )
-      const audienceMatch = kol.audience.some(kolAudience =>
-        audience.toLowerCase().includes(kolAudience.toLowerCase())
-      )
-      return playsRelevantGames && hasRegionalPresence && audienceMatch
-    })
+  // Add a helper method to clean region strings
+  private cleanRegionString(region: string): string {
+    return region
+      .toLowerCase()
+      .replace(/in the /g, '')
+      .replace(/\s+/g, ' ')
+      .trim();
   }
 
-  generateRecommendations(objective: string, target: string, region: string[], games: Game[], kols: KOL[]) {
-    console.log("Generating recommendations for:", { objective, target, region });
+  findRelevantKOLs(games: Game[], target: string, regions: string[]): KOL[] {
+    const cleanedRegions = regions.map(r => this.cleanRegionString(r));
+    
+    // Extract interests and keywords from target string
+    const keywords = target.toLowerCase().split(/[,\s]+/).filter(word => 
+      word.length > 3 && 
+      !['who', 'like', 'and', 'from', 'age'].includes(word)
+    );
 
-    // Filter games based on campaign criteria
+    return kols.filter(kol => {
+      // More flexible region matching
+      const matchesRegion = cleanedRegions.some(region => 
+        kol.regions.some(kolRegion => 
+          this.cleanRegionString(kolRegion).includes(region) ||
+          (region === 'usa' && kolRegion.includes('North America'))
+        )
+      );
+
+      // More flexible audience matching
+      const matchesAudience = kol.audience.some(audienceType => 
+        keywords.some(keyword => 
+          audienceType.toLowerCase().includes(keyword) ||
+          keyword.includes(audienceType.toLowerCase())
+        )
+      ) || kol.categories.some(category =>
+        keywords.some(keyword =>
+          category.toLowerCase().includes(keyword) ||
+          keyword.includes(category.toLowerCase())
+        )
+      );
+
+      // Log matching criteria for debugging
+      console.log(`KOL ${kol.name} matches:`, {
+        matchesAudience,
+        matchesRegion,
+        regions: cleanedRegions,
+        kolRegions: kol.regions,
+        keywords,
+        kolAudience: kol.audience,
+        kolCategories: kol.categories
+      });
+
+      // More flexible matching criteria
+      return matchesRegion || matchesAudience;
+    });
+  }
+
+  async generateRecommendations(objective: string, target: string, region: string[], games: Game[], kols: KOL[]) {
+    try {
+      // Call DeepSeek API
+      const response = await fetch('/api/deepseek', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          objective,
+          target,
+          region: region.join(', '),
+          games: games.map(g => ({
+            id: g.id,
+            name: g.name,
+            audience: g.audience,
+            regions: g.regions,
+            marketingCapabilities: g.marketingCapabilities
+          }))
+        })
+      });
+
+      if (!response.ok) {
+        throw new Error('Failed to get AI recommendations');
+      }
+
+      const data = await response.json();
+      
+      if (data.error) {
+        throw new Error(data.error);
+      }
+
+      // Parse the AI response
+      let aiRecommendations;
+      try {
+        aiRecommendations = typeof data.response === 'string' 
+          ? JSON.parse(data.response)
+          : data.response;
+      } catch (parseError) {
+        console.error('Failed to parse AI response:', parseError);
+        throw parseError;
+      }
+
+      // Filter games based on AI recommendations
+      const recommendedGames = games.filter(game => 
+        aiRecommendations.recommendedGames.includes(game.id)
+      );
+
+      // Get KOL recommendations
+      const recommendedKOLs = this.findRelevantKOLs(recommendedGames, target, region);
+
+      return {
+        recommendedGames,
+        recommendedKOLs,
+        analysis: {
+          gameStrategy: aiRecommendations.gameStrategy,
+          audienceMatch: aiRecommendations.audienceMatch,
+          regionalFocus: aiRecommendations.regionalFocus
+        }
+      };
+
+    } catch (error) {
+      console.error('Error getting AI recommendations:', error);
+      // Fallback to basic recommendations if AI fails
+      return this.generateBasicRecommendations(objective, target, region, games, kols);
+    }
+  }
+
+  // Update generateBasicRecommendations to use the cleaned regions
+  private generateBasicRecommendations(objective: string, target: string, region: string[], games: Game[], kols: KOL[]) {
+    const cleanedRegions = region.map(r => this.cleanRegionString(r));
+    
     const recommendedGames = games.filter(game => {
+      // More flexible objective matching
       const matchesObjective = game.marketingCapabilities.some(cap =>
-        cap.toLowerCase().includes('launch') || 
+        objective.toLowerCase().includes(cap.toLowerCase()) ||
         cap.toLowerCase().includes('brand') ||
         cap.toLowerCase().includes('product')
       );
       
+      // More flexible audience matching
       const matchesAudience = game.audience.interests.some(interest =>
         target.toLowerCase().includes(interest.toLowerCase()) ||
-        interest.toLowerCase().includes('social') ||
-        interest.toLowerCase().includes('lifestyle')
+        interest.toLowerCase().includes('gaming') ||
+        interest.toLowerCase().includes(target.toLowerCase())
       );
       
+      // More flexible region matching
       const matchesRegion = game.regions.some(r =>
-        region.some(reg => {
-          const regionLower = reg.toLowerCase();
-          return regionLower.includes(r.toLowerCase()) ||
-                 (regionLower.includes('usa') && r.includes('North America'));
-        })
+        cleanedRegions.some(reg => 
+          this.cleanRegionString(r).includes(reg) ||
+          (reg === 'usa' && r.includes('North America'))
+        )
       );
       
-      const isRecommended = matchesObjective || (matchesAudience && matchesRegion);
-      console.log(`Game ${game.name} matches:`, { matchesObjective, matchesAudience, matchesRegion });
-      return isRecommended;
+      // Return true if matches either objective + (audience or region)
+      return matchesObjective && (matchesAudience || matchesRegion);
     });
 
-    // Filter KOLs based on campaign criteria
-    const recommendedKOLs = kols.filter(kol => {
-      const matchesAudience = kol.audience.some(aud => {
-        const targetLower = target.toLowerCase();
-        const audLower = aud.toLowerCase();
-        return targetLower.includes(audLower) ||
-               audLower.includes('fashion') ||
-               audLower.includes('sports') ||
-               audLower.includes(targetLower);
-      });
-      
-      const matchesRegion = kol.regions.some(r =>
-        region.some(reg => {
-          const regionLower = reg.toLowerCase();
-          return regionLower.includes(r.toLowerCase()) ||
-                 (regionLower.includes('usa') && r.includes('North America'));
-        })
-      );
-      
-      // Relaxed game matching
-      const playsRelevantGames = kol.games.some(game => 
-        game.toLowerCase().includes('roblox')
-      );
-      
-      const isRecommended = (matchesAudience || matchesRegion) && playsRelevantGames;
-      console.log(`KOL ${kol.name} matches:`, { matchesAudience, matchesRegion, playsRelevantGames });
-      return isRecommended;
-    });
+    // Ensure we have at least 3 game recommendations
+    const finalGames = recommendedGames.length >= 3 ? recommendedGames : games.slice(0, 3);
 
-    console.log("Final recommendations:", { recommendedGames, recommendedKOLs });
+    // Get KOL recommendations with more flexible matching
+    const recommendedKOLs = this.findRelevantKOLs(finalGames, target, cleanedRegions);
+    const finalKOLs = recommendedKOLs.length >= 3 ? recommendedKOLs : kols.slice(0, 3);
 
     return {
-      recommendedGames,
-      recommendedKOLs,
+      recommendedGames: finalGames,
+      recommendedKOLs: finalKOLs,
       analysis: {
         gameStrategy: "Focus on games with high social interaction and fashion/lifestyle elements",
         audienceMatch: "Target fashion-conscious gamers and social media enthusiasts",
-        regionalFocus: region.some(r => r.toLowerCase().includes('asia')) 
+        regionalFocus: cleanedRegions.includes('asia')
           ? "Emphasize mobile and social platforms with fashion integration"
           : "Focus on cross-platform presence with lifestyle elements"
       }

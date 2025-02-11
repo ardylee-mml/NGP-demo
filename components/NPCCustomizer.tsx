@@ -1,184 +1,250 @@
-"use client"
+"use client";
 
-import * as React from "react"
-import { useState, useEffect } from "react"
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
-import { Button } from "@/components/ui/button"
-import { X, Eye, Plus, Shirt, Footprints, Package, Play, Sparkles, Gamepad, Trophy } from "lucide-react"
+import { useState } from "react";
 import {
   Dialog,
   DialogContent,
   DialogHeader,
   DialogTitle,
-  DialogTrigger,
-} from "@/components/ui/dialog"
-import { ItemUploader } from "./ItemUploader"
-
-interface CustomizationItem {
-  id: string
-  name: string
-  image: string
-}
-
-interface SelectedItems {
-  clothes: CustomizationItem[]
-  shoes: CustomizationItem[]
-  items: CustomizationItem[]
-  animations: CustomizationItem[]
-}
+} from "@/components/ui/dialog";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { ScrollArea } from "@/components/ui/scroll-area";
+import { KOL } from "@/lib/kolDatabase";
+import {
+  CustomizationItem,
+  customizationItems,
+  categories,
+} from "@/lib/customizationDatabase";
+import { Badge } from "@/components/ui/badge";
+import {
+  Tooltip,
+  TooltipContent,
+  TooltipProvider,
+  TooltipTrigger,
+} from "@/components/ui/tooltip";
+import { Button } from "@/components/ui/button";
+import { X, Plus } from "lucide-react";
+import { UploadDialog } from "@/components/ui/upload-dialog";
 
 interface NPCCustomizerProps {
-  isSelectionArea?: boolean
-  className?: string
-  selectedItems: SelectedItems
-  setSelectedItems: (items: SelectedItems) => void
+  isOpen: boolean;
+  onClose: () => void;
+  npc: KOL;
+  initialCustomizations?: {
+    clothes: CustomizationItem | null;
+    shoes: CustomizationItem | null;
+    items: CustomizationItem | null;
+    animations: CustomizationItem | null;
+  };
+  onSave: (customizations: Record<string, CustomizationItem | null>) => void;
 }
 
-const CUSTOMIZATION_OPTIONS = {
-  clothes: [
-    { id: 'c1', name: 'Nike Hoodie', image: '/outfits/Nike-hoodie.png' },
-    { id: 'c2', name: 'Adidas Sport Shirt', image: '/outfits/White-shirt-Adidas.png' },
-    { id: 'c3', name: 'Supreme T-Shirt', image: '/outfits/White-Shirt-Supreme.png' },
-    { id: 'c4', name: 'Gucci Jacket', image: '/outfits/Color-jacket-Gucci.png' }
-  ],
-  shoes: [
-    { id: 's1', name: 'Dr. Martens Boots', image: '/outfits/DrMartenBoots.png' },
-    { id: 's2', name: 'Nike Air Max', image: '/outfits/MixColor-Nike-AirMax.png' },
-    { id: 's3', name: 'Adidas Superstar', image: '/outfits/Red-shoes-Adidas-Superstar.png' }
-  ],
-  items: [
-    { id: 'i1', name: 'Coca-Cola Can', image: '/items/CocaCola.png' },
-    { id: 'i2', name: 'Pepsi Bottle', image: '/items/Pepsi.png' },
-    { id: 'i3', name: 'Red Bull Energy', image: '/items/Redbull.png' },
-    { id: 'i4', name: 'Monster Energy', image: '/items/MonsterEnergy.png' }
-  ],
-  animations: [
-    { id: 'a1', name: 'Dance Move', image: '/animations/hiphop.png' },
-    { id: 'a2', name: 'Victory Pose', image: '/animations/Victory.png' },
-    { id: 'a3', name: 'Drink Animation', image: '/animations/Drinking.png' }
-  ]
-} as const
-
-const categoryIcons = {
-  clothes: Shirt,
-  shoes: Footprints,
-  items: Package,
-  animations: Play
-}
-
-export function NPCCustomizer({ 
-  isSelectionArea = false, 
-  className = "",
-  selectedItems,
-  setSelectedItems
+export function NPCCustomizer({
+  isOpen,
+  onClose,
+  npc,
+  initialCustomizations,
+  onSave,
 }: NPCCustomizerProps) {
+  const [selectedItems, setSelectedItems] = useState<
+    Record<string, CustomizationItem | null>
+  >(
+    initialCustomizations || {
+      clothes: null,
+      shoes: null,
+      items: null,
+      animations: null,
+    }
+  );
 
-  const removeItem = (category: keyof SelectedItems, itemId: string) => {
-    setSelectedItems({
-      ...selectedItems,
-      [category]: selectedItems[category].filter((item) => item.id !== itemId)
-    })
-  }
+  const [activeTab, setActiveTab] = useState("clothes");
+  const [uploadCategory, setUploadCategory] = useState<string | null>(null);
 
-  const handleItemSelect = (category: keyof SelectedItems, item: CustomizationItem) => {
-    setSelectedItems({
-      ...selectedItems,
-      [category]: [item]
-    })
-  }
+  const handleItemSelect = (item: CustomizationItem) => {
+    setSelectedItems((prev) => ({
+      ...prev,
+      [item.category]: prev[item.category]?.id === item.id ? null : item, // Toggle selection
+    }));
+  };
 
-  const handlePreview = () => {
-    // Preview functionality to be implemented
-    console.log("Preview:", selectedItems)
-  }
+  const handleRemoveItem = (category: string) => {
+    setSelectedItems((prev) => ({
+      ...prev,
+      [category]: null,
+    }));
+  };
+
+  const isItemSelected = (item: CustomizationItem) => {
+    return selectedItems[item.category]?.id === item.id;
+  };
+
+  const isItemCompatible = (item: CustomizationItem) => {
+    return true; // Make all items selectable
+  };
+
+  const handleUpload = (data: {
+    name: string;
+    description: string;
+    file: File | null;
+  }) => {
+    console.log("Uploading new item:", {
+      category: uploadCategory,
+      ...data,
+    });
+    // Mock implementation - would typically call an API here
+  };
+
+  if (!npc) return null;
 
   return (
-    <Card className={`bg-white border-0 shadow-sm ${className}`}>
-      <CardHeader className="border-b border-[#46DFB1]">
-        <CardTitle className="text-[#213A58] text-xl font-semibold">
-          {isSelectionArea ? "Selected Items" : "Customization Options"}
-        </CardTitle>
-      </CardHeader>
-      <CardContent className="pt-6">
-        <div className="space-y-6">
-          {Object.entries(isSelectionArea ? selectedItems : CUSTOMIZATION_OPTIONS).map(([category, items]) => (
-            <div key={category}>
-              <div className="flex items-center justify-between mb-3">
-                <div className="flex items-center gap-2">
-                  {!isSelectionArea && React.createElement(categoryIcons[category as keyof typeof categoryIcons], {
-                    className: "h-4 w-4 text-[#15919B]"
-                  })}
-                  <h3 className="text-[#213A58] font-semibold capitalize">{category}</h3>
-                </div>
-                {!isSelectionArea && (
-                  <Dialog>
-                    <DialogTrigger asChild>
-                      <Button 
-                        variant="ghost" 
-                        size="sm"
-                        className="h-8 w-8 p-0 hover:bg-[#46DFB1]/20 text-[#15919B]"
-                      >
-                        <Plus className="h-4 w-4" />
-                      </Button>
-                    </DialogTrigger>
-                    <DialogContent>
-                      <DialogHeader>
-                        <DialogTitle>Add New {category.charAt(0).toUpperCase() + category.slice(1)}</DialogTitle>
-                      </DialogHeader>
-                      <ItemUploader
-                        category={category as keyof SelectedItems}
-                        onItemAdd={(item) => {
-                          setSelectedItems({
-                            ...selectedItems,
-                            [category]: [...selectedItems[category as keyof SelectedItems], item]
-                          })
-                        }}
-                      />
-                    </DialogContent>
-                  </Dialog>
-                )}
-              </div>
-              <div className="min-h-[60px] bg-[#46DFB1]/10 p-2 rounded space-y-2">
-                {items.map((item: CustomizationItem) => (
-                  <div
-                    key={item.id}
-                    className={`bg-white p-2 rounded flex items-center justify-between ${
-                      !isSelectionArea ? 'cursor-pointer hover:bg-[#46DFB1]/5' : ''
-                    }`}
-                    onDoubleClick={() => !isSelectionArea && handleItemSelect(category as keyof SelectedItems, item)}
-                  >
-                    <div className="flex items-center">
-                      <img
-                        src={item.image}
-                        alt={item.name}
-                        className="w-8 h-8 mr-2 rounded"
-                        draggable="false"
-                      />
-                      <span className="text-[#213A58]">{item.name}</span>
-                    </div>
-                    {isSelectionArea && (
-                      <Button
-                        variant="ghost"
-                        size="sm"
-                        className="hover:bg-[#46DFB1]/20 text-[#15919B]"
-                        onClick={() => removeItem(category as keyof SelectedItems, item.id)}
-                      >
-                        <X className="h-4 w-4" />
-                      </Button>
+    <Dialog open={isOpen} onOpenChange={onClose}>
+      <DialogContent className="max-w-4xl">
+        <DialogHeader>
+          <DialogTitle>Customize {npc.name}</DialogTitle>
+        </DialogHeader>
+
+        <div className="grid grid-cols-2 gap-6">
+          {/* Left Column */}
+          <div>
+            <h3 className="font-medium mb-4">Preview</h3>
+            <div className="aspect-square bg-gray-100 rounded-lg relative">
+              <img
+                src={npc.image}
+                alt={npc.name}
+                className="w-full h-full object-contain"
+              />
+            </div>
+          </div>
+
+          {/* Right Column */}
+          <div>
+            {/* Selected Items Card */}
+            <div className="bg-gray-50 rounded-lg p-4 mb-4">
+              <h3 className="font-medium mb-3">Selected Items</h3>
+              <div className="space-y-3">
+                {Object.entries(categories).map(([key, category]) => (
+                  <div key={key}>
+                    <h4 className="text-sm font-medium mb-1">
+                      {category.name}
+                    </h4>
+                    {selectedItems[key] ? (
+                      <div className="flex items-center justify-between bg-white rounded-md px-3 py-2">
+                        <span className="text-sm">
+                          {selectedItems[key]!.name}
+                        </span>
+                        <Button
+                          variant="ghost"
+                          size="sm"
+                          className="h-6 w-6 p-0 hover:bg-gray-100"
+                          onClick={() => handleRemoveItem(key)}
+                        >
+                          <X className="h-4 w-4" />
+                        </Button>
+                      </div>
+                    ) : (
+                      <div className="bg-white rounded-md px-3 py-2">
+                        <span className="text-sm text-gray-400">
+                          No {category.name.toLowerCase()} selected
+                        </span>
+                      </div>
                     )}
                   </div>
                 ))}
               </div>
             </div>
-          ))}
-        </div>
-        {isSelectionArea && (
-          <Button onClick={handlePreview} className="w-full mt-6 bg-[#15919B] hover:bg-[#0C6478] text-white">
-            <Eye className="mr-2 h-4 w-4" /> Preview Character
-          </Button>
-        )}
-      </CardContent>
-    </Card>
-  )
-}
 
+            {/* Customization Tabs */}
+            <Tabs value={activeTab} onValueChange={setActiveTab}>
+              <TabsList className="grid grid-cols-4">
+                {Object.entries(categories).map(([key, category]) => (
+                  <TabsTrigger key={key} value={key}>
+                    {category.name}
+                  </TabsTrigger>
+                ))}
+              </TabsList>
+
+              {Object.entries(customizationItems).map(([category, items]) => (
+                <TabsContent key={category} value={category} className="mt-4">
+                  <div className="flex justify-between items-center mb-4">
+                    <h3 className="font-medium">
+                      {categories[category as keyof typeof categories].name}
+                    </h3>
+                    <Button
+                      variant="outline"
+                      size="sm"
+                      onClick={() => setUploadCategory(category)}
+                    >
+                      <Plus className="h-4 w-4 mr-2" />
+                      Upload New Item
+                    </Button>
+                  </div>
+                  <ScrollArea className="h-[300px] pr-4">
+                    <div className="grid grid-cols-2 gap-4">
+                      {items.map((item) => (
+                        <TooltipProvider key={item.id}>
+                          <Tooltip>
+                            <TooltipTrigger asChild>
+                              <button
+                                className={`p-2 rounded-lg border transition-colors ${
+                                  isItemSelected(item)
+                                    ? "border-blue-500 bg-blue-50 ring-2 ring-blue-200"
+                                    : "border-gray-200 hover:border-gray-300"
+                                }`}
+                                onClick={() => handleItemSelect(item)}
+                              >
+                                <img
+                                  src={item.image}
+                                  alt={item.name}
+                                  className="w-full aspect-square object-contain rounded-md mb-2"
+                                />
+                                <div className="text-sm font-medium">
+                                  {item.name}
+                                </div>
+                                {item.brands && (
+                                  <div className="flex flex-wrap gap-1 mt-1">
+                                    {item.brands.map((brand) => (
+                                      <Badge
+                                        key={brand}
+                                        variant="secondary"
+                                        className="text-xs"
+                                      >
+                                        {brand}
+                                      </Badge>
+                                    ))}
+                                  </div>
+                                )}
+                              </button>
+                            </TooltipTrigger>
+                            <TooltipContent>
+                              {`Click to ${
+                                isItemSelected(item) ? "remove" : "select"
+                              } ${item.name}`}
+                            </TooltipContent>
+                          </Tooltip>
+                        </TooltipProvider>
+                      ))}
+                    </div>
+                  </ScrollArea>
+                </TabsContent>
+              ))}
+            </Tabs>
+          </div>
+        </div>
+
+        <div className="flex justify-end gap-2 mt-4 pt-4 border-t">
+          <Button variant="outline" onClick={onClose}>
+            Cancel
+          </Button>
+          <Button onClick={() => onSave(selectedItems)}>Save Changes</Button>
+        </div>
+
+        <UploadDialog
+          isOpen={!!uploadCategory}
+          onClose={() => setUploadCategory(null)}
+          category={uploadCategory || ""}
+          onUpload={handleUpload}
+        />
+      </DialogContent>
+    </Dialog>
+  );
+}

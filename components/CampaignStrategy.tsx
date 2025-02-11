@@ -78,7 +78,39 @@ export function CampaignStrategy({ campaignInfo }: { campaignInfo: any }) {
       <CardHeader>
         <CardTitle>Campaign Strategy</CardTitle>
       </CardHeader>
-      <CardContent className="space-y-4">
+      <CardContent className="space-y-6">
+        {/* Campaign Information Section */}
+        <div className="grid gap-4 p-4 bg-gray-50 rounded-lg">
+          <h3 className="font-medium text-gray-900">Campaign Information</h3>
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+            <div>
+              <h4 className="text-sm font-medium text-gray-700">
+                Primary Objective
+              </h4>
+              <p className="mt-1 text-sm text-gray-600">
+                {campaignInfo.objective}
+              </p>
+            </div>
+            <div>
+              <h4 className="text-sm font-medium text-gray-700">
+                Target Audience
+              </h4>
+              <p className="mt-1 text-sm text-gray-600">
+                {campaignInfo.target}
+              </p>
+            </div>
+            <div>
+              <h4 className="text-sm font-medium text-gray-700">
+                Target Market
+              </h4>
+              <p className="mt-1 text-sm text-gray-600">
+                {campaignInfo.region}
+              </p>
+            </div>
+          </div>
+        </div>
+
+        {/* Analysis Section */}
         <div className="grid gap-4">
           <div className="p-4 bg-blue-50 rounded-lg">
             <h3 className="font-medium text-blue-800 mb-2">Game Strategy</h3>
