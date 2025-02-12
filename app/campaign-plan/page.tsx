@@ -7,7 +7,7 @@ import GameRecommendations from "@/components/GameRecommendations";
 import KOLRecommendations from "@/components/KOLRecommendations";
 import { useMarketingCampaign } from "@/contexts/MarketingCampaignContext";
 import { Button } from "@/components/ui/button";
-import { ChevronLeft } from "lucide-react";
+import { ChevronLeft, Gamepad2, Users, Puzzle } from "lucide-react";
 import Link from "next/link";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import GameplayRecommendations from "@/components/GameplayRecommendations";
@@ -50,24 +50,27 @@ export default function CampaignPlan() {
         </div>
 
         <Tabs defaultValue="games" className="space-y-6">
-          <TabsList className="grid w-[1000px] grid-cols-3 p-1 mx-auto">
+          <TabsList className="grid w-[1000px] grid-cols-3 p-1 mx-auto bg-muted">
             <TabsTrigger
               value="games"
-              className="px-12 py-4 text-lg font-medium whitespace-nowrap transition-all data-[state=active]:bg-blue-50 data-[state=active]:text-blue-900 data-[state=active]:shadow-sm hover:bg-gray-50"
+              className="inline-flex items-center justify-center px-12 py-4 text-lg font-medium gap-2 whitespace-nowrap transition-all data-[state=active]:bg-blue-50 data-[state=active]:text-blue-900 data-[state=active]:shadow-sm hover:bg-gray-50"
             >
-              Recommended Games
+              <Gamepad2 className="h-5 w-5" strokeWidth={2} />
+              <span>Recommended Games</span>
             </TabsTrigger>
             <TabsTrigger
               value="kols"
-              className="px-12 py-4 text-lg font-medium whitespace-nowrap transition-all data-[state=active]:bg-blue-50 data-[state=active]:text-blue-900 data-[state=active]:shadow-sm hover:bg-gray-50"
+              className="inline-flex items-center justify-center px-12 py-4 text-lg font-medium gap-2 whitespace-nowrap transition-all data-[state=active]:bg-blue-50 data-[state=active]:text-blue-900 data-[state=active]:shadow-sm hover:bg-gray-50"
             >
-              Recommended KOLs
+              <Users className="h-5 w-5" strokeWidth={2} />
+              <span>Recommended KOLs</span>
             </TabsTrigger>
             <TabsTrigger
               value="minigames"
-              className="px-12 py-4 text-lg font-medium whitespace-nowrap transition-all data-[state=active]:bg-blue-50 data-[state=active]:text-blue-900 data-[state=active]:shadow-sm hover:bg-gray-50"
+              className="inline-flex items-center justify-center px-12 py-4 text-lg font-medium gap-2 whitespace-nowrap transition-all data-[state=active]:bg-blue-50 data-[state=active]:text-blue-900 data-[state=active]:shadow-sm hover:bg-gray-50"
             >
-              Recommended Mini-Games
+              <Puzzle className="h-5 w-5" strokeWidth={2} />
+              <span>Recommended Mini-Games</span>
             </TabsTrigger>
           </TabsList>
 

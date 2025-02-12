@@ -29,6 +29,7 @@ export interface KOL {
   image: string
   games: string[]
   specialties: string[]
+  animatedImage: string
 }
 
 export const kols: KOL[] = [
@@ -54,6 +55,7 @@ export const kols: KOL[] = [
     defaultAnimations: ['Victory Dance', 'Gaming Pose', 'Energetic Wave'],
     stats: 'Followers: 2.5M, Engagement Rate: 4.8%, Main Platform: Instagram',
     image: '/characters/TechTrix.png',
+    animatedImage: '/characters/animated/TechTrix.gif',
     regions: ['North America', 'Europe'],
     platforms: ['Twitch', 'YouTube', 'TikTok'],
     audience: ['2.5M', '16-24', 'Gaming', 'Technology', 'Streaming'],
@@ -92,6 +94,7 @@ export const kols: KOL[] = [
     defaultAnimations: ['Sports Celebration', 'Training Routine', 'Victory Pose'],
     stats: 'Followers: 3.8M, Engagement Rate: 7.2%, Main Platform: TikTok',
     image: '/characters/SportStar-Athlete.png',
+    animatedImage: '/characters/animated/SportStar-Athlete.gif',
     regions: ['North America', 'Europe'],
     platforms: ['Instagram', 'TikTok', 'YouTube'],
     audience: ['3.8M', '18-25', 'Sports', 'Fitness', 'Health'],
@@ -130,6 +133,7 @@ export const kols: KOL[] = [
     defaultAnimations: ['Drawing Pose', 'Creative Expression', 'Artistic Flourish'],
     stats: 'Followers: 5.1M, Engagement Rate: 6.5%, Main Platform: Twitter',
     image: '/characters/ArtisticSoul-Artist.png',
+    animatedImage: '/characters/animated/ArtisticSoul-Artist.gif',
     regions: ['North America', 'Europe'],
     platforms: ['Instagram', 'YouTube', 'Twitter'],
     audience: ['5.1M', '18-25', 'Art', 'Design', 'Digital'],
@@ -168,6 +172,7 @@ export const kols: KOL[] = [
     defaultAnimations: ['Catwalk', 'Photo Pose', 'Elegant Wave'],
     stats: 'Followers: 4.2M, Engagement Rate: 5.9%, Main Platform: Instagram',
     image: '/characters/StyleIcon-FashionInfluencer.png',
+    animatedImage: '/characters/animated/StyleIcon-FashionInfluencer.gif',
     regions: ['North America', 'Europe'],
     platforms: ['Instagram', 'TikTok', 'Pinterest'],
     audience: ['4.2M', '18-25', 'Fashion', 'Beauty', 'Shopping'],
@@ -206,6 +211,7 @@ export const kols: KOL[] = [
     defaultAnimations: ['Sophisticated Walk', 'Combat Stance', 'Charm Gesture'],
     stats: 'Followers: 2.5M, Engagement Rate: 4.8%, Main Platform: Instagram',
     image: '/characters/JamesBond.png',
+    animatedImage: '/characters/animated/JamesBond.gif',
     regions: ['North America', 'Europe'],
     platforms: ['Instagram', 'YouTube', 'LinkedIn'],
     audience: ['2.5M', '18-25', 'Action', 'Spy', 'Luxury'],
@@ -222,7 +228,6 @@ export const kols: KOL[] = [
     games: ["Roblox", "Minecraft"],
     specialties: ["Game Reviews", "Live Streaming"]
   },
-
   {
     id: 'k6',
     name: 'ROSE',
@@ -245,6 +250,7 @@ export const kols: KOL[] = [
     defaultAnimations: ['Dance Moves', 'Stage Performance', 'Cute Wave'],
     stats: 'Followers: 3.8M, Engagement Rate: 7.2%, Main Platform: TikTok',
     image: '/characters/Rose.png',
+    animatedImage: '/characters/animated/Rose.gif',
     regions: ['Asia', 'North America', 'Europe'],
     platforms: ['Instagram', 'TikTok', 'YouTube'],
     audience: ['3.8M', '13-25', 'K-pop', 'Fashion', 'Music'],
@@ -283,6 +289,7 @@ export const kols: KOL[] = [
     defaultAnimations: ['Rap Performance', 'Street Walk', 'Mic Drop'],
     stats: 'Followers: 5.1M, Engagement Rate: 6.5%, Main Platform: Twitter',
     image: '/characters/Eminem.png',
+    animatedImage: '/characters/animated/Eminem.gif',
     regions: ['North America', 'Europe'],
     platforms: ['Instagram', 'Twitter', 'YouTube'],
     audience: ['5.1M', '18-25', 'Hip-hop', 'Rap', 'Urban'],
@@ -321,6 +328,7 @@ export const kols: KOL[] = [
     defaultAnimations: ['Performance Dance', 'Catwalk', 'Queen Pose'],
     stats: 'Followers: 4.2M, Engagement Rate: 5.9%, Main Platform: Instagram',
     image: '/characters/Nicki.png',
+    animatedImage: '/characters/animated/Nicki.gif',
     regions: ['North America', 'Europe'],
     platforms: ['Instagram', 'TikTok', 'Twitter'],
     audience: ['4.2M', '18-25', 'Hip-hop', 'Fashion', 'Music'],

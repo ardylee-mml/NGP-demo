@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import {
   Dialog,
   DialogContent,
@@ -59,6 +59,15 @@ export function NPCCustomizer({
 
   const [activeTab, setActiveTab] = useState("clothes");
   const [uploadCategory, setUploadCategory] = useState<string | null>(null);
+  const [isHovering, setIsHovering] = useState(false);
+
+  // Add image error handling
+  const [imageError, setImageError] = useState(false);
+
+  // Reset error state when NPC changes
+  useEffect(() => {
+    setImageError(false);
+  }, [npc]);
 
   const handleItemSelect = (item: CustomizationItem) => {
     setSelectedItems((prev) => ({
@@ -107,12 +116,27 @@ export function NPCCustomizer({
           {/* Left Column */}
           <div>
             <h3 className="font-medium mb-4">Preview</h3>
-            <div className="aspect-square bg-gray-100 rounded-lg relative">
+            <div
+              className="aspect-square bg-gray-100 rounded-lg relative overflow-hidden"
+              onMouseEnter={() => !imageError && setIsHovering(true)}
+              onMouseLeave={() => setIsHovering(false)}
+            >
               <img
-                src={npc.image}
-                alt={npc.name}
-                className="w-full h-full object-contain"
+                src={
+                  isHovering && !imageError ? npc?.animatedImage : npc?.image
+                }
+                alt={npc?.name}
+                className="w-full h-full object-contain transition-opacity duration-300"
+                onError={() => {
+                  setImageError(true);
+                  setIsHovering(false);
+                }}
               />
+              {isHovering && !imageError && (
+                <div className="absolute bottom-2 right-2 bg-black/50 text-white text-xs px-2 py-1 rounded">
+                  Hover to animate
+                </div>
+              )}
             </div>
           </div>
 
