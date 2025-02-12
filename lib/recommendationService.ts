@@ -1,12 +1,6 @@
 import { Game, games } from './gameDatabase'
 import { KOL, kols } from './kolDatabase'
-import OpenAI from 'openai';
 import { gameplayElements } from "@/lib/gameplayDatabase";
-
-const openai = new OpenAI({
-  apiKey: process.env.DEEPSEEK_API_KEY,
-  baseURL: 'https://api.deepseek.com/v1',
-});
 
 interface MarketStrategy {
   usa: {
@@ -35,6 +29,14 @@ const marketStrategies: MarketStrategy = {
 }
 
 export class RecommendationService {
+  getGames(): Game[] {
+    return games;
+  }
+
+  getKOLs(): KOL[] {
+    return kols;
+  }
+
   analyzeMarketFit(regions: string[], games: Game[]): Game[] {
     const isUSA = regions.some(r => r.toLowerCase().includes('usa'))
     const isAsia = regions.some(r => r.toLowerCase().includes('asia'))
@@ -117,69 +119,10 @@ export class RecommendationService {
 
   async generateRecommendations(objective: string, target: string, region: string[], games: Game[], kols: KOL[]) {
     try {
-      // Call DeepSeek API
-      const response = await fetch('/api/deepseek', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({
-          objective,
-          target,
-          region: region.join(', '),
-          games: games.map(g => ({
-            id: g.id,
-            name: g.name,
-            audience: g.audience,
-            regions: g.regions,
-            marketingCapabilities: g.marketingCapabilities
-          }))
-        })
-      });
-
-      if (!response.ok) {
-        throw new Error('Failed to get AI recommendations');
-      }
-
-      const data = await response.json();
-      
-      if (data.error) {
-        throw new Error(data.error);
-      }
-
-      // Parse the AI response
-      let aiRecommendations;
-      try {
-        aiRecommendations = typeof data.response === 'string' 
-          ? JSON.parse(data.response)
-          : data.response;
-      } catch (parseError) {
-        console.error('Failed to parse AI response:', parseError);
-        throw parseError;
-      }
-
-      // Filter games based on AI recommendations
-      const recommendedGames = games.filter(game => 
-        aiRecommendations.recommendedGames.includes(game.id)
-      );
-
-      // Get KOL recommendations
-      const recommendedKOLs = this.findRelevantKOLs(recommendedGames, target, region);
-
-      return {
-        recommendedGames,
-        recommendedKOLs,
-        recommendedMinigames: gameplayElements,
-        analysis: {
-          gameStrategy: aiRecommendations.gameStrategy,
-          audienceMatch: aiRecommendations.audienceMatch,
-          regionalFocus: aiRecommendations.regionalFocus
-        }
-      };
-
+      // For now, use basic recommendations directly
+      return this.generateBasicRecommendations(objective, target, region, games, kols);
     } catch (error) {
-      console.error('Error getting AI recommendations:', error);
-      // Fallback to basic recommendations if AI fails
+      console.error('Error:', error);
       return this.generateBasicRecommendations(objective, target, region, games, kols);
     }
   }

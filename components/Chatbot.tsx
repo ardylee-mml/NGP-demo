@@ -295,22 +295,30 @@ export function Chatbot() {
         // Get recommendations
         const response = await fetch("/api/recommendations", {
           method: "POST",
-          headers: { "Content-Type": "application/json" },
+          headers: {
+            "Content-Type": "application/json",
+          },
           body: JSON.stringify({
-            campaignInfo: messageInfo.campaignDetails,
+            objective: messageInfo.campaignDetails.objective,
+            target: messageInfo.campaignDetails.target,
+            region: messageInfo.campaignDetails.region,
           }),
         });
 
-        const recommendationsData = await response.json();
-        console.log("Received recommendations:", recommendationsData);
+        if (!response.ok) {
+          throw new Error("Failed to get recommendations");
+        }
+
+        const recommendations = await response.json();
+        console.log("Received recommendations:", recommendations);
 
         // Set recommendations in local state
-        setRecommendations(recommendationsData);
+        setRecommendations(recommendations);
 
         // Update global state
         setCampaignDetails({
           ...messageInfo.campaignDetails,
-          recommendations: recommendationsData,
+          recommendations: recommendations,
         });
         setIsComplete(true);
 

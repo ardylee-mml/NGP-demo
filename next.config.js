@@ -2,7 +2,15 @@
 const nextConfig = {
   env: {
     DEEPSEEK_API_KEY: process.env.DEEPSEEK_API_KEY,
-  }
+  },
+  async rewrites() {
+    return [
+      {
+        source: '/api/:path*',
+        destination: 'http://localhost:3000/api/:path*',
+      },
+    ];
+  },
 }
 
 module.exports = nextConfig 

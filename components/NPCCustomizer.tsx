@@ -29,14 +29,19 @@ import { UploadDialog } from "@/components/ui/upload-dialog";
 interface NPCCustomizerProps {
   isOpen: boolean;
   onClose: () => void;
-  npc: KOL;
+  npc: KOL | null;
   initialCustomizations?: {
     clothes: CustomizationItem | null;
     shoes: CustomizationItem | null;
     items: CustomizationItem | null;
     animations: CustomizationItem | null;
   };
-  onSave: (customizations: Record<string, CustomizationItem | null>) => void;
+  onSave: (customizations: {
+    clothes: CustomizationItem | null;
+    shoes: CustomizationItem | null;
+    items: CustomizationItem | null;
+    animations: CustomizationItem | null;
+  }) => void;
 }
 
 export function NPCCustomizer({
@@ -46,9 +51,12 @@ export function NPCCustomizer({
   initialCustomizations,
   onSave,
 }: NPCCustomizerProps) {
-  const [selectedItems, setSelectedItems] = useState<
-    Record<string, CustomizationItem | null>
-  >(
+  const [currentCustomizations, setCurrentCustomizations] = useState<{
+    clothes: CustomizationItem | null;
+    shoes: CustomizationItem | null;
+    items: CustomizationItem | null;
+    animations: CustomizationItem | null;
+  }>(
     initialCustomizations || {
       clothes: null,
       shoes: null,
@@ -69,22 +77,38 @@ export function NPCCustomizer({
     setImageError(false);
   }, [npc]);
 
+  // Reset customizations when different KOL is selected
+  useEffect(() => {
+    setCurrentCustomizations(
+      initialCustomizations || {
+        clothes: null,
+        shoes: null,
+        items: null,
+        animations: null,
+      }
+    );
+  }, [npc?.id, initialCustomizations]);
+
   const handleItemSelect = (item: CustomizationItem) => {
-    setSelectedItems((prev) => ({
+    setCurrentCustomizations((prev) => ({
       ...prev,
-      [item.category]: prev[item.category]?.id === item.id ? null : item, // Toggle selection
+      [item.category as keyof typeof prev]:
+        prev[item.category as keyof typeof prev]?.id === item.id ? null : item,
     }));
   };
 
   const handleRemoveItem = (category: string) => {
-    setSelectedItems((prev) => ({
+    setCurrentCustomizations((prev) => ({
       ...prev,
-      [category]: null,
+      [category as keyof typeof prev]: null,
     }));
   };
 
   const isItemSelected = (item: CustomizationItem) => {
-    return selectedItems[item.category]?.id === item.id;
+    return (
+      currentCustomizations[item.category as keyof typeof currentCustomizations]
+        ?.id === item.id
+    );
   };
 
   const isItemCompatible = (item: CustomizationItem) => {
@@ -101,6 +125,10 @@ export function NPCCustomizer({
       ...data,
     });
     // Mock implementation - would typically call an API here
+  };
+
+  const handleSave = () => {
+    onSave(currentCustomizations);
   };
 
   if (!npc) return null;
@@ -151,10 +179,16 @@ export function NPCCustomizer({
                     <h4 className="text-sm font-medium mb-1">
                       {category.name}
                     </h4>
-                    {selectedItems[key] ? (
+                    {currentCustomizations[
+                      key as keyof typeof currentCustomizations
+                    ] ? (
                       <div className="flex items-center justify-between bg-white rounded-md px-3 py-2">
                         <span className="text-sm">
-                          {selectedItems[key]!.name}
+                          {
+                            currentCustomizations[
+                              key as keyof typeof currentCustomizations
+                            ]!.name
+                          }
                         </span>
                         <Button
                           variant="ghost"
@@ -259,7 +293,7 @@ export function NPCCustomizer({
           <Button variant="outline" onClick={onClose}>
             Cancel
           </Button>
-          <Button onClick={() => onSave(selectedItems)}>Save Changes</Button>
+          <Button onClick={handleSave}>Save Changes</Button>
         </div>
 
         <UploadDialog

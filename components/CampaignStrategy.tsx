@@ -6,7 +6,17 @@ import { useMarketingCampaign } from "@/contexts/MarketingCampaignContext";
 import CampaignSummary from "./CampaignSummary";
 import GameRecommendations from "./GameRecommendations";
 import KOLRecommendations from "./KOLRecommendations";
-import { ArrowLeft } from "lucide-react";
+import {
+  ArrowLeft,
+  Target,
+  Users,
+  Globe,
+  TrendingUp,
+  MessageCircle,
+  Lightbulb,
+  Flag,
+} from "lucide-react";
+import { useState } from "react";
 
 function generateRecommendations(details: {
   objective: string;
@@ -74,57 +84,79 @@ export function CampaignStrategy({ campaignInfo }: { campaignInfo: any }) {
   const { analysis } = campaignInfo.recommendations;
 
   return (
-    <Card>
-      <CardHeader>
-        <CardTitle>Campaign Strategy</CardTitle>
+    <Card className="hover:shadow-lg transition-shadow duration-300">
+      <CardHeader className="border-b border-blue-100">
+        <CardTitle className="flex items-center gap-2">
+          <div className="p-2 bg-blue-100 rounded-full">
+            <Flag className="h-5 w-5 text-blue-600 animate-pulse" />
+          </div>
+          <span className="bg-gradient-to-r from-blue-600 to-blue-800 bg-clip-text text-transparent">
+            Campaign Strategy
+          </span>
+        </CardTitle>
       </CardHeader>
-      <CardContent className="space-y-6">
-        {/* Campaign Information Section */}
-        <div className="grid gap-4 p-4 bg-gray-50 rounded-lg">
-          <h3 className="font-medium text-gray-900">Campaign Information</h3>
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-            <div>
-              <h4 className="text-sm font-medium text-gray-700">
-                Primary Objective
-              </h4>
-              <p className="mt-1 text-sm text-gray-600">
-                {campaignInfo.objective}
-              </p>
+      <CardContent className="grid gap-4 p-6">
+        <div className="grid grid-cols-3 gap-4">
+          <div className="p-4 bg-blue-50 rounded-lg hover:bg-blue-100 transition-colors duration-200 group">
+            <div className="flex items-center gap-2 text-blue-800 mb-2">
+              <div className="p-2 bg-blue-100 rounded-full group-hover:bg-blue-200 transition-colors">
+                <Target className="h-5 w-5 group-hover:scale-110 transition-transform" />
+              </div>
+              <h3 className="font-medium">Campaign Objective</h3>
             </div>
-            <div>
-              <h4 className="text-sm font-medium text-gray-700">
-                Target Audience
-              </h4>
-              <p className="mt-1 text-sm text-gray-600">
-                {campaignInfo.target}
-              </p>
+            <p className="text-sm text-blue-700">{analysis.objective}</p>
+          </div>
+
+          <div className="p-4 bg-indigo-50 rounded-lg hover:bg-indigo-100 transition-colors duration-200 group">
+            <div className="flex items-center gap-2 text-indigo-800 mb-2">
+              <div className="p-2 bg-indigo-100 rounded-full group-hover:bg-indigo-200 transition-colors">
+                <Users className="h-5 w-5 group-hover:scale-110 transition-transform" />
+              </div>
+              <h3 className="font-medium">Target Audience</h3>
             </div>
-            <div>
-              <h4 className="text-sm font-medium text-gray-700">
-                Target Market
-              </h4>
-              <p className="mt-1 text-sm text-gray-600">
-                {campaignInfo.region}
-              </p>
+            <p className="text-sm text-indigo-700">{analysis.targetAudience}</p>
+          </div>
+
+          <div className="p-4 bg-purple-50 rounded-lg hover:bg-purple-100 transition-colors duration-200 group">
+            <div className="flex items-center gap-2 text-purple-800 mb-2">
+              <div className="p-2 bg-purple-100 rounded-full group-hover:bg-purple-200 transition-colors">
+                <Globe className="h-5 w-5 group-hover:scale-110 transition-transform" />
+              </div>
+              <h3 className="font-medium">Regional Focus</h3>
             </div>
+            <p className="text-sm text-purple-700">{analysis.regionalFocus}</p>
           </div>
         </div>
 
-        {/* Analysis Section */}
-        <div className="grid gap-4">
-          <div className="p-4 bg-blue-50 rounded-lg">
-            <h3 className="font-medium text-blue-800 mb-2">Game Strategy</h3>
-            <p className="text-sm text-blue-700">{analysis.gameStrategy}</p>
+        <div className="grid grid-cols-3 gap-4">
+          <div className="p-4 bg-cyan-50 rounded-lg hover:bg-cyan-100 transition-colors duration-200 group">
+            <div className="flex items-center gap-2 text-cyan-800 mb-2">
+              <div className="p-2 bg-cyan-100 rounded-full group-hover:bg-cyan-200 transition-colors">
+                <TrendingUp className="h-5 w-5 group-hover:scale-110 transition-transform" />
+              </div>
+              <h3 className="font-medium">Success Metrics</h3>
+            </div>
+            <p className="text-sm text-cyan-700">{analysis.successMetrics}</p>
           </div>
 
-          <div className="p-4 bg-green-50 rounded-lg">
-            <h3 className="font-medium text-green-800 mb-2">Audience Match</h3>
-            <p className="text-sm text-green-700">{analysis.audienceMatch}</p>
+          <div className="p-4 bg-teal-50 rounded-lg hover:bg-teal-100 transition-colors duration-200 group">
+            <div className="flex items-center gap-2 text-teal-800 mb-2">
+              <div className="p-2 bg-teal-100 rounded-full group-hover:bg-teal-200 transition-colors">
+                <MessageCircle className="h-5 w-5 group-hover:scale-110 transition-transform" />
+              </div>
+              <h3 className="font-medium">Key Messages</h3>
+            </div>
+            <p className="text-sm text-teal-700">{analysis.keyMessages}</p>
           </div>
 
-          <div className="p-4 bg-purple-50 rounded-lg">
-            <h3 className="font-medium text-purple-800 mb-2">Regional Focus</h3>
-            <p className="text-sm text-purple-700">{analysis.regionalFocus}</p>
+          <div className="p-4 bg-emerald-50 rounded-lg hover:bg-emerald-100 transition-colors duration-200 group">
+            <div className="flex items-center gap-2 text-emerald-800 mb-2">
+              <div className="p-2 bg-emerald-100 rounded-full group-hover:bg-emerald-200 transition-colors">
+                <Lightbulb className="h-5 w-5 group-hover:scale-110 transition-transform" />
+              </div>
+              <h3 className="font-medium">Campaign Approach</h3>
+            </div>
+            <p className="text-sm text-emerald-700">{analysis.approach}</p>
           </div>
         </div>
       </CardContent>
